@@ -55,6 +55,10 @@ The lexer recognizes the following tokens (names come from `src/tokenTypes.js`):
 - EOF
 
 
+First install dependencies:
+```
+npm i 
+```
 
 To run the program:
 ```
