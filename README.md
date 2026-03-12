@@ -38,18 +38,18 @@ The lexer recognizes the following tokens (names come from `src/tokenTypes.js`):
 - STRING
 
 ### Punctuation & Operators
-- LPAREN ( )
-- RPAREN ( )
-- LBRACE { }
-- RBRACE { }
-- SEMICOLON ;
-- COMMA ,
-- DOT .
-- ASSIGN =
-- PLUS +
-- MINUS -
-- STAR *
-- SLASH /
+- LPAREN `(` 
+- RPAREN `)`
+- LBRACE `{`
+- RBRACE `}`
+- SEMICOLON `;`
+- COMMA `,`
+- DOT `.`
+- ASSIGN `=`
+- PLUS `+`
+- MINUS `-`
+- STAR `*`
+- SLASH `/`
 
 ### Other
 - EOF
