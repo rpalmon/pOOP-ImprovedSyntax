@@ -85,13 +85,16 @@ export class Lexer{
                     case '\\': lexeme += '\\'; break;
                     default: this.error(`Invalid escape sequence \\${escapeChar}`);
                 }
+                this.advance();
             } else {
                 lexeme += this.advance();
             }
         }
+        if (this.peek() === "\0") {
+          this.error("Unterminated string");
+        }
         this.advance(); // skip closing quote
         return { type: TokenType.STRING, lexeme, literal: lexeme, line: startLine, col: startCol };
-        
       }
 
       nextToken(){
@@ -128,7 +131,7 @@ export class Lexer{
       tokenize(){
         const tokens =[];
         while(true) {
-            const token = this.nextToken
+            const token = this.nextToken();
             tokens.push(token);
             if(token.type === TokenType.EOF) break;
         }
