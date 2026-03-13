@@ -70,11 +70,59 @@ export class Lexer{
       }
 
       readString(){
-
+        const startLine = this.line;
+        const startCol = this.col;
+        let lexeme = "";
+        this.advance(); // skip opening quote
+        while(this.peek() !== '"' && this.peek() !== "\0"){
+            if(this.peek() === "\\"){
+                this.advance(); // skip backslash
+                const escapeChar = this.peek();
+                switch(escapeChar){
+                    case '"': lexeme += '"'; break;
+                    case 'n': lexeme += '\n'; break;
+                    case 't': lexeme += '\t'; break;
+                    case '\\': lexeme += '\\'; break;
+                    default: this.error(`Invalid escape sequence \\${escapeChar}`);
+                }
+            } else {
+                lexeme += this.advance();
+            }
+        }
+        this.advance(); // skip closing quote
+        return { type: TokenType.STRING, lexeme, literal: lexeme, line: startLine, col: startCol };
+        
       }
 
       nextToken(){
-
+        this.skipWhitespace();
+        const ch = this.peek();
+        if(ch === "\0") return this.makeToken(TokenType.EOF, "", null);
+        if(/[0-9]/.test(ch)) return this.readNumber();
+        if(/[A-Za-z_]/.test(ch)) return this.readIdentifierOrKeyword();
+        if(ch === '"') return this.readString();
+        // Handle single-character tokens
+        const singleCharTokens = {
+            '(': TokenType.LPAREN,
+            ')': TokenType.RPAREN,
+            '{': TokenType.LBRACE,
+            '}': TokenType.RBRACE,
+            ';': TokenType.SEMICOLON,
+            ',': TokenType.COMMA,
+            '.': TokenType.DOT,
+            '=': TokenType.ASSIGN,
+            '+': TokenType.PLUS,
+            '-': TokenType.MINUS,
+            '*': TokenType.STAR,
+            '/': TokenType.SLASH
+        };
+        if(singleCharTokens[ch]){
+            const tokenType = singleCharTokens[ch];
+            this.advance();
+            return this.makeToken(tokenType, ch);
+        }
+        this.error(`Unexpected character: ${ch}`);
+        return null;
       }
 
       tokenize(){
