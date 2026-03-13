@@ -55,4 +55,36 @@ export class Lexer{
         return { type: TokenType.INTEGER, lexeme, literal: Number(lexeme), line: startLine, col: startCol };
       }
 
+      readIdentifierOrKeyword() {
+        const startLine = this.line;
+        const startCol = this.col;
+        let lexeme = "";
+        while (/[A-Za-z0-9_]/.test(this.peek())) {
+          lexeme += this.advance();
+        }
+        const keywordType = KEYWORDS[lexeme];
+        if (keywordType) {
+          return { type: keywordType, lexeme, literal: null, line: startLine, col: startCol };
+        }
+        return { type: TokenType.IDENTIFIER, lexeme, literal: null, line: startLine, col: startCol };
+      }
+
+      readString(){
+
+      }
+
+      nextToken(){
+
+      }
+
+      tokenize(){
+        const tokens =[];
+        while(true) {
+            const token = this.nextToken
+            tokens.push(token);
+            if(token.type === TokenType.EOF) break;
+        }
+        return tokens;
+      }
+
 }
