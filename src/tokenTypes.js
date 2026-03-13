@@ -1,4 +1,4 @@
-export const TokenTypes = {
+export const TokenType = {
     CLASS: "CLASS",
     EXTENDS: "EXTENDS",
     INIT: "INIT",
