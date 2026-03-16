@@ -1,4 +1,4 @@
-import { TokenType } from './tokenTypes'
+import { TokenType } from './tokenTypes.js'
 
 export const KEYWORDS = {
     class: TokenType.CLASS,

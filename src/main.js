@@ -13,15 +13,17 @@ const inputPath =
 try {
     const source = fs.readFileSync(inputPath, "utf8");
     const lexer = new Lexer(source);
-    const tokens = lexar.tokenize();
+    const tokens = lexer.tokenize();
 
     console.log(`Lexing file: ${inputPath}\n`);
     for (const token of tokens) {
         console.log(
-            `${token.type.padEnd(12)} lexeme=${JSON.stringify(token.lexeme)} value=${JSON.stringify(token.value)} @ ${token.line}:${token.column}`
+            `${token.type.padEnd(12)} lexeme=${JSON.stringify(token.lexeme)} value=${JSON.stringify(token.literal)} @ ${token.line}:${token.col}`
         );
     }
 } catch (err) {
     console.error("Lexer error:", err.message);
     process.exit(1);
 }
+
+// Run node src/main.js examples/test.poop.txt to test lexer

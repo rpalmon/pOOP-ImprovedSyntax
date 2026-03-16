@@ -8,6 +8,7 @@
         "jest": "jest"
     },
     "devDependencies": {
-        "jest": "^30.3.0"
+        "jest": "^30.3.0",
+        "nyc": "^18.0.0"
     }
 }

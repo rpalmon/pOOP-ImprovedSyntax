@@ -1,5 +1,5 @@
-import { TokenType } from "./tokenTypes";
-import { KEYWORDS } from "./keywords";
+import { TokenType } from "./tokenTypes.js";
+import { KEYWORDS } from "./keywords.js";
 
 export class Lexer{
     constructor(source) {
