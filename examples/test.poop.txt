@@ -1,0 +1,42 @@
+class Animal {
+
+  init() {}
+
+  method speak() Void {
+    return println("animal");
+  }
+
+}
+
+class Cat extends Animal {
+
+  init() {
+    super();
+  }
+
+  method speak() Void {
+    return println("cat");
+  }
+
+}
+
+class Dog extends Animal {
+
+  init() {
+    super();
+  }
+
+  method speak() Void {
+    return println("dog");
+  }
+
+}
+
+Animal cat;
+Animal dog;
+
+cat = new Cat();
+dog = new Dog();
+
+cat.speak();
+dog.speak();

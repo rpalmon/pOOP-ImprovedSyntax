@@ -1,0 +1,40 @@
+export const TokenType = {
+    CLASS: "CLASS",
+    EXTENDS: "EXTENDS",
+    INIT: "INIT",
+    METHOD: "METHOD",
+    SUPER: "SUPER",
+    RETURN: "RETURN",
+    IF: "IF",
+    ELSE: "ELSE",
+    WHILE: "WHILE",
+    BREAK: "BREAK",
+    NEW: "NEW",
+    THIS: "THIS",
+    TRUE: "TRUE",
+    FALSE: "FALSE",
+    PRINTLN: "PRINTLN",
+
+    INT_TYPE: "INT_TYPE",
+    BOOLEAN_TYPE: "BOOLEAN_TYPE",
+    VOID_TYPE: "VOID_TYPE",
+
+    IDENTIFIER: "IDENTIFIER",
+    INTEGER: "INTEGER",
+    STRING: "STRING",
+
+    LPAREN: "LPAREN",
+    RPAREN: "RPAREN",
+    LBRACE: "LBRACE",
+    RBRACE: "RBRACE",
+    SEMICOLON: "SEMICOLON",
+    COMMA: "COMMA",
+    DOT: "DOT",
+    ASSIGN: "ASSIGN",
+    PLUS: "PLUS",
+    MINUS: "MINUS",
+    STAR: "STAR",
+    SLASH: "SLASH",
+
+    EOF: "EOF"
+}
