@@ -15,14 +15,26 @@ test("tokenizes a simple identifier", () => {
   assert.equal(token.col, 1);
 });
 
+// Strict assertion for keywords (replaces the weak notEqual test)
 test("tokenizes a keyword", () => {
   const lexer = new Lexer("class");
   const token = lexer.nextToken();
 
-  assert.notEqual(token.type, TokenType.IDENTIFIER);
+  assert.equal(token.type, TokenType.CLASS);
   assert.equal(token.lexeme, "class");
   assert.equal(token.line, 1);
   assert.equal(token.col, 1);
+});
+
+// Brand new test specifically for the Primitive Types 
+test("tokenizes primitive types as reserved words", () => {
+  const lexer = new Lexer("Int Boolean Void");
+  const tokens = lexer.tokenize();
+
+  assert.equal(tokens[0].type, TokenType.INT_TYPE);
+  assert.equal(tokens[1].type, TokenType.BOOLEAN_TYPE);
+  assert.equal(tokens[2].type, TokenType.VOID_TYPE);
+  assert.equal(tokens[3].type, TokenType.EOF);
 });
 
 test("tokenizes an integer", () => {
@@ -179,6 +191,17 @@ dog.speak();
 `;
 
   const tokens = new Lexer(src).tokenize();
+
+  // FIX 3: Strict assertions for the large program instead of just checking if length > 0
+  assert.equal(tokens.length, 111, "Should emit exactly 111 tokens for this specific source code");
+  
+  
+  assert.equal(tokens[0].type, TokenType.CLASS);
+  assert.equal(tokens[1].type, TokenType.IDENTIFIER);
+  assert.equal(tokens[2].type, TokenType.LBRACE);
+  
+  assert.equal(tokens.at(-1).type, TokenType.EOF);
+});
 
   assert.ok(tokens.length > 0);
   assert.equal(tokens.at(-1).type, TokenType.EOF);
