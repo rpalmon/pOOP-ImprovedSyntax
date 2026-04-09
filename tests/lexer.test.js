@@ -202,7 +202,3 @@ dog.speak();
   
   assert.equal(tokens.at(-1).type, TokenType.EOF);
 });
-
-  assert.ok(tokens.length > 0);
-  assert.equal(tokens.at(-1).type, TokenType.EOF);
-});
