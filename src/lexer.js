@@ -1,7 +1,22 @@
 import { TokenType } from "./tokenTypes.js";
 import { KEYWORDS } from "./keywords.js";
 
+const SINGLE_CHAR_TOKENS = {
+  "(": TokenType.LPAREN,
+  ")": TokenType.RPAREN,
+  "{": TokenType.LBRACE,
+  "}": TokenType.RBRACE,
+  ";": TokenType.SEMICOLON,
+  ",": TokenType.COMMA,
+  ".": TokenType.DOT,
+  "=": TokenType.ASSIGN,
+  "+": TokenType.PLUS,
+  "-": TokenType.MINUS,
+  "*": TokenType.STAR,
+  "/": TokenType.SLASH,
+  };
 export class Lexer{
+
     constructor(source) {
         this.source = source;
         this.i = 0;
@@ -37,11 +52,20 @@ export class Lexer{
     skipWhitespace() {
         while (true) {
           const ch = this.peek();
+
           if (ch === " " || ch === "\t" || ch === "\r" || ch === "\n") {
             this.advance();
-          } else {
-            break;
+            continue;
+          } 
+
+          if (ch === "/" && this.peek(1) === "/") {
+            while (this.peek() !== "\n" && this.peek() !== "\0") {
+              this.advance();
+            }
+            continue;
           }
+
+          break;
         }
       }
 
@@ -112,36 +136,6 @@ export class Lexer{
           }
           this.advance();
         } else {
-          lexeme += this.advance();
-          }
-      }
-      if (this.peek() === "\0") {
-        this.error("Unterminated string", startLine, startCol);
-      }
-      this.advance(); // skip closing quote
-      return { type: TokenType.STRING, lexeme, literal: lexeme, line: startLine, col: startCol };
-    }
-
-    readString(){
-      const startLine = this.line;
-      const startCol = this.col;
-      let lexeme = "";
-      this.advance(); // skip opening quote
-      while(this.peek() !== '"' && this.peek() !== "\0"){
-        if(this.peek() === "\\"){
-          const escapeLine = this.line;
-          const escapeCol = this.col;
-          this.advance(); // skip backslash
-          const escapeChar = this.peek();
-          switch(escapeChar){
-            case '"': lexeme += '"'; break;
-            case 'n': lexeme += '\n'; break;
-            case 't': lexeme += '\t'; break;
-            case '\\': lexeme += '\\'; break;
-            default: this.error(`Invalid escape sequence '\\${escapeChar}'`, escapeLine, escapeCol);
-          }
-          this.advance();
-        } else {
             lexeme += this.advance();
           }
       }
@@ -155,32 +149,20 @@ export class Lexer{
     nextToken(){
       this.skipWhitespace();
       const ch = this.peek();
+
       if(ch === "\0") return this.makeToken(TokenType.EOF, "", null);
       if(/[0-9]/.test(ch)) return this.readNumber();
       if(/[A-Za-z_]/.test(ch)) return this.readIdentifierOrKeyword();
       if(ch === '"') return this.readString();
-      // Handle single-character tokens
-      const singleCharTokens = {
-        '(': TokenType.LPAREN,
-        ')': TokenType.RPAREN,
-        '{': TokenType.LBRACE,
-        '}': TokenType.RBRACE,
-        ';': TokenType.SEMICOLON,
-        ',': TokenType.COMMA,
-        '.': TokenType.DOT,
-        '=': TokenType.ASSIGN,
-        '+': TokenType.PLUS,
-        '-': TokenType.MINUS,
-        '*': TokenType.STAR,
-        '/': TokenType.SLASH
-      };
-      if(singleCharTokens[ch]){
-        const tokenType = singleCharTokens[ch];
+
+      if (SINGLE_CHAR_TOKENS[ch]) {
+        const tokenType = SINGLE_CHAR_TOKENS[ch];
         this.advance();
         return this.makeToken(tokenType, ch);
       }
-        this.error(`Unexpected character '${ch}'`);
-        return null;
+
+      this.error(`Unexpected character '${ch}'`);
+      return null; // Unreachable, but satisfies function return type
     }
 
     tokenize(){

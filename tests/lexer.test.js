@@ -130,6 +130,26 @@ test("skips whitespace and tracks line/column", () => {
   assert.equal(token.col, 1);
 });
 
+test("skips single-line comments", () => {
+  const lexer = new Lexer("// comment here\nclass");
+  const token = lexer.nextToken();
+
+  assert.equal(token.type, TokenType.CLASS);
+  assert.equal(token.lexeme, "class");
+  assert.equal(token.line, 2);
+  assert.equal(token.col, 1);
+});
+
+test("skips inline single-line comments", () => {
+  const lexer = new Lexer('class // comment\nCat');
+  const tokens = lexer.tokenize();
+
+  assert.equal(tokens[0].type, TokenType.CLASS);
+  assert.equal(tokens[1].type, TokenType.IDENTIFIER);
+  assert.equal(tokens[1].lexeme, "Cat");
+  assert.equal(tokens[2].type, TokenType.EOF);
+});
+
 test("tokenizes single character tokens", () => {
   const lexer = new Lexer("(){};,.=+-*/");
   const tokens = lexer.tokenize().map(t => t.type);
@@ -315,6 +335,21 @@ test("tokenizes object construction", () => {
   ]);
 });
 
+test("tokenizes empty source as EOF", () => {
+  const tokens = new Lexer("").tokenize();
+
+  assert.equal(tokens.length, 1);
+  assert.equal(tokens[0].type, TokenType.EOF);
+});
+
+test("tokenizes identifiers with underscores and numbers", () => {
+  const lexer = new Lexer("my_var_2");
+  const token = lexer.nextToken();
+
+  assert.equal(token.type, TokenType.IDENTIFIER);
+  assert.equal(token.lexeme, "my_var_2");
+});
+
 test("boolean literals have correct literal values", () => {
   const lexer = new Lexer("true false");
 
@@ -342,5 +377,7 @@ test("tracks token positions across multiple lines", () => {
   assert.equal(t2.line, 2);
   assert.equal(t2.col, 1);
 });
+
+
 
 const lexer = new Lexer("(){};,.=+-*/");
