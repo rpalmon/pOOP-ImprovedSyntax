@@ -61,8 +61,8 @@ npm i
 ```
 
 To run the program:
-```
-npm run
+```bash
+npm run start
 ```
 
 To test the program:

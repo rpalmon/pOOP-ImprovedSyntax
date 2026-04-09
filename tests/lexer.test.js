@@ -140,7 +140,11 @@ test("skips single-line comments", () => {
 });
 
 test("skips inline single-line comments", () => {
+<<<<<<< HEAD
   const lexer = new Lexer("class // comment\nCat");
+=======
+  const lexer = new Lexer('class // comment\nCat');
+>>>>>>> 349e5ce (Fix CLI default input path, update README instructions, and refactor lexer token handling)
   const tokens = lexer.tokenize();
 
   assert.equal(tokens[0].type, TokenType.CLASS);
@@ -475,6 +479,7 @@ test("tracks token positions across multiple lines", () => {
 =======
   const tokens = new Lexer(src).tokenize();
 
+<<<<<<< HEAD
   // FIX 3: Strict assertions for the large program instead of just checking if length > 0
   assert.equal(tokens.length, 111, "Should emit exactly 111 tokens for this specific source code");
   
@@ -486,3 +491,8 @@ test("tracks token positions across multiple lines", () => {
   assert.equal(tokens.at(-1).type, TokenType.EOF);
 });
 >>>>>>> 29a4493 (Enhance lexer test coverage and assertions)
+=======
+
+
+const lexer = new Lexer("(){};,.=+-*/");
+>>>>>>> 349e5ce (Fix CLI default input path, update README instructions, and refactor lexer token handling)

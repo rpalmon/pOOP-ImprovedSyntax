@@ -6,9 +6,8 @@ import { Lexer } from "./lexer.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const inputPath = 
-    process.argv[2] ??
-    path.join(__dirname, "..", "examples", "test.poop");
+const defaultFile = path.join(__dirname, "..", "examples", "test.poop.txt");
+const inputPath = process.argv[2] ?? defaultFile;
 
 try {
     const source = fs.readFileSync(inputPath, "utf8");
@@ -22,7 +21,8 @@ try {
         );
     }
 } catch (err) {
-    console.error("Lexer error:", err.message);
+    console.error(`Failed to lex file: ${inputPath}`);
+    console.error(err.message);
     process.exit(1);
 }
 
