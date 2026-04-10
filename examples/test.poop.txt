@@ -40,3 +40,5 @@ dog = new Dog();
 
 cat.speak();
 dog.speak();
+
+Int x = 5;
