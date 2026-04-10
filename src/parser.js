@@ -245,12 +245,14 @@ export class Parser {
   parseReturn(startPosition) {
     this.assertTokenHereIs(startPosition, TokenType.RETURN);
     const nextToken = this.getToken(startPosition + 1);
-    if (nextToken.type === TokenType.SEMICOLON) {
-      return new ParseResult(new ReturnStmt(null), startPosition + 2);
-    } else {
-      const expResult = this.parseExp(startPosition + 1);
-      this.assertTokenHereIs(expResult.nextPos, TokenType.SEMICOLON);
-      return new ParseResult(new ReturnStmt(expResult.result), expResult.nextPos + 1);
+    switch (nextToken.type) {
+      case TokenType.SEMICOLON:
+        return new ParseResult(new ReturnStmt(null), startPosition + 2);
+      default: {
+        const expResult = this.parseExp(startPosition + 1);
+        this.assertTokenHereIs(expResult.nextPos, TokenType.SEMICOLON);
+        return new ParseResult(new ReturnStmt(expResult.result), expResult.nextPos + 1);
+      }
     }
   }
 
@@ -326,17 +328,22 @@ export class Parser {
         const firstToken = this.getToken(currentPosition);
         const secondToken = this.getToken(currentPosition + 1);
 
-        if (
-          (firstToken.type === TokenType.INT_TYPE || firstToken.type === TokenType.BOOLEAN_TYPE || firstToken.type === TokenType.VOID_TYPE) &&
-          secondToken.type === TokenType.IDENTIFIER
-        ) {
-          params.push({ type: firstToken.lexeme, name: secondToken.lexeme });
-          currentPosition += 2;
-        } else if (firstToken.type === TokenType.IDENTIFIER) {
-          params.push({ type: null, name: firstToken.lexeme });
-          currentPosition += 1;
-        } else {
-          throw new ParseException(`Expected parameter, got: ${firstToken.type} at line ${firstToken.line}`);
+        switch (firstToken.type) {
+          case TokenType.INT_TYPE:
+          case TokenType.BOOLEAN_TYPE:
+          case TokenType.VOID_TYPE:
+            if (secondToken.type !== TokenType.IDENTIFIER) {
+              throw new ParseException(`Expected parameter name, got: ${secondToken.type} at line ${secondToken.line}`);
+            }
+            params.push({ type: firstToken.lexeme, name: secondToken.lexeme });
+            currentPosition += 2;
+            break;
+          case TokenType.IDENTIFIER:
+            params.push({ type: null, name: firstToken.lexeme });
+            currentPosition += 1;
+            break;
+          default:
+            throw new ParseException(`Expected parameter, got: ${firstToken.type} at line ${firstToken.line}`);
         }
 
         if (this.getToken(currentPosition).type !== TokenType.COMMA) {
@@ -366,22 +373,29 @@ export class Parser {
     let paramsStart = null;
     let currentPosition = startPosition;
 
-    if (firstToken.type === TokenType.METHOD) {
-      const nextToken = this.getToken(startPosition + 1);
-      if (nextToken.type === TokenType.IDENTIFIER) {
-        methodName = nextToken.lexeme;
-        paramsStart = startPosition + 2;
-      } else if (nextToken.type === TokenType.LPAREN) {
-        methodName = "method";
-        paramsStart = startPosition + 1;
-      } else {
-        throw new ParseException(`Expected method name, got: ${nextToken.type} at line ${nextToken.line}`);
+    switch (firstToken.type) {
+      case TokenType.METHOD: {
+        const nextToken = this.getToken(startPosition + 1);
+        switch (nextToken.type) {
+          case TokenType.IDENTIFIER:
+            methodName = nextToken.lexeme;
+            paramsStart = startPosition + 2;
+            break;
+          case TokenType.LPAREN:
+            methodName = "method";
+            paramsStart = startPosition + 1;
+            break;
+          default:
+            throw new ParseException(`Expected method name, got: ${nextToken.type} at line ${nextToken.line}`);
+        }
+        break;
       }
-    } else if (firstToken.type === TokenType.IDENTIFIER) {
-      methodName = firstToken.lexeme;
-      paramsStart = startPosition + 1;
-    } else {
-      throw new ParseException(`Expected method definition, got: ${firstToken.type} at line ${firstToken.line}`);
+      case TokenType.IDENTIFIER:
+        methodName = firstToken.lexeme;
+        paramsStart = startPosition + 1;
+        break;
+      default:
+        throw new ParseException(`Expected method definition, got: ${firstToken.type} at line ${firstToken.line}`);
     }
 
     const paramsResult = this.parseParams(paramsStart);

@@ -100,10 +100,15 @@ export class Lexer {
     if (keywordType) {
       let literal = null;
 
-      if (keywordType === TokenType.TRUE) {
-        literal = true;
-      } else if (keywordType === TokenType.FALSE) {
-        literal = false;
+      switch (keywordType) {
+        case TokenType.TRUE:
+          literal = true;
+          break;
+        case TokenType.FALSE:
+          literal = false;
+          break;
+        default:
+          break;
       }
 
       return {
