@@ -14,7 +14,6 @@ const SINGLE_CHAR_TOKENS = {
   "-": TokenType.MINUS,
   "*": TokenType.STAR,
   "/": TokenType.SLASH,
-  "&": TokenType.AND,
 };
 
 export class Lexer {
@@ -179,7 +178,11 @@ export class Lexer {
   nextToken() {
     this.skipWhitespace();
     const ch = this.peek();
-
+    if(ch === "&" && this.peek(1) === "&") {
+      this.advance();
+      this.advance();
+      return this.makeToken(TokenType.AND, "&&");
+    }
     if (ch === "\0") return this.makeToken(TokenType.EOF, "", null);
     if (/[0-9]/.test(ch)) return this.readNumber();
     if (/[A-Za-z_]/.test(ch)) return this.readIdentifierOrKeyword();
