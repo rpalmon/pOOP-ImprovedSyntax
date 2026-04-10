@@ -100,10 +100,15 @@ export class Lexer {
     if (keywordType) {
       let literal = null;
 
-      if (keywordType === TokenType.TRUE) {
-        literal = true;
-      } else if (keywordType === TokenType.FALSE) {
-        literal = false;
+      switch (keywordType) {
+        case TokenType.TRUE:
+          literal = true;
+          break;
+        case TokenType.FALSE:
+          literal = false;
+          break;
+        default:
+          break;
       }
 
       return {
@@ -178,11 +183,19 @@ export class Lexer {
   nextToken() {
     this.skipWhitespace();
     const ch = this.peek();
-
+    if(ch === "&" && this.peek(1) === "&") {
+      this.advance();
+      this.advance();
+      return this.makeToken(TokenType.AND, "&&");
+    }
     if (ch === "\0") return this.makeToken(TokenType.EOF, "", null);
     if (/[0-9]/.test(ch)) return this.readNumber();
     if (/[A-Za-z_]/.test(ch)) return this.readIdentifierOrKeyword();
     if (ch === '"') return this.readString();
+
+    if (ch === "&" && this.peek(1) === "&") {
+      // TODO: implement && tokenization
+    }
 
     if (SINGLE_CHAR_TOKENS[ch]) {
       const tokenType = SINGLE_CHAR_TOKENS[ch];
