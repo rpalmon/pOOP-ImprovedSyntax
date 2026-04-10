@@ -61,3 +61,12 @@ export class Program {
     this.stmts = stmts; 
   }
 }
+
+export class IntegerLiteral {
+  //kind: IntegerLiteral
+  //value: number
+  constructor(value) {
+    this.value = value;
+  }
+}
+
