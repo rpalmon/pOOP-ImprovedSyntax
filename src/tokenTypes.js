@@ -35,6 +35,7 @@ export const TokenType = {
     MINUS: "MINUS",
     STAR: "STAR",
     SLASH: "SLASH",
+    AND: "AND",
 
     EOF: "EOF"
 }

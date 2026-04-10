@@ -184,6 +184,10 @@ export class Lexer {
     if (/[A-Za-z_]/.test(ch)) return this.readIdentifierOrKeyword();
     if (ch === '"') return this.readString();
 
+    if (ch === "&" && this.peek(1) === "&") {
+      // TODO: implement && tokenization
+    }
+
     if (SINGLE_CHAR_TOKENS[ch]) {
       const tokenType = SINGLE_CHAR_TOKENS[ch];
       this.advance();

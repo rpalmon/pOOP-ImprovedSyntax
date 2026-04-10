@@ -1,10 +1,13 @@
 // parser.js
 import { TokenType } from "./tokenTypes.js";
-import { 
-  ParseResult, ParseException, 
+import {
+  ParseResult, ParseException,
   IdentifierExp, IntegerExp, ParenExp, BinopExp,
-  PlusOp, MinusOp, StarOp, SlashOp,
-  VarDecStmt, AssignStmt, Program 
+  PlusOp, MinusOp, StarOp, SlashOp, AndOp,
+  BooleanLiteral, NewExp, ThisExp, SuperExp, MethodCallExp, FieldAccessExp,
+  VarDecStmt, AssignStmt, ReturnStmt, PrintlnStmt, IfStmt, WhileStmt, BreakStmt,
+  ClassDef, InitDef, MethodDef,
+  Program
 } from "./ast.js";
 
 export class Parser {
@@ -27,7 +30,7 @@ export class Parser {
     }
   }
 
-  // op ::= `+` | `-` | `*` | `/`
+  // op ::= `+` | `-` | `*` | `/` | `&&`
   parseOp(startPosition) {
     const token = this.getToken(startPosition);
     if (token.type === TokenType.PLUS) {
@@ -38,15 +41,17 @@ export class Parser {
       return new ParseResult(new StarOp(), startPosition + 1);
     } else if (token.type === TokenType.SLASH) {
       return new ParseResult(new SlashOp(), startPosition + 1);
+    } else if (token.type === TokenType.AND) {
+      // TODO: implement AndOp parsing
     } else {
       throw new ParseException(`Expected operator, got: ${token.type}`);
     }
   }
 
-  // primaryExp ::= IDENTIFIER | INTEGER | `(` exp `)`
+  // primaryExp ::= IDENTIFIER | INTEGER | BOOLEAN | `(` exp `)` | `this` | `super` | `new` IDENTIFIER `(` args `)`
   parsePrimaryExp(startPosition) {
     const firstToken = this.getToken(startPosition);
-    
+
     if (firstToken.type === TokenType.IDENTIFIER) {
       return new ParseResult(new IdentifierExp(firstToken.lexeme), startPosition + 1);
     } else if (firstToken.type === TokenType.INTEGER) {
@@ -55,9 +60,27 @@ export class Parser {
       const exp = this.parseExp(startPosition + 1);
       this.assertTokenHereIs(exp.nextPos, TokenType.RPAREN);
       return new ParseResult(new ParenExp(exp.result), exp.nextPos + 1);
+    } else if (firstToken.type === TokenType.TRUE || firstToken.type === TokenType.FALSE) {
+      // TODO: implement boolean literal parsing
+    } else if (firstToken.type === TokenType.THIS) {
+      // TODO: implement this expression parsing
+    } else if (firstToken.type === TokenType.SUPER) {
+      // TODO: implement super expression parsing
+    } else if (firstToken.type === TokenType.NEW) {
+      // TODO: implement new expression parsing
     } else {
       throw new ParseException(`Expected primary exp; found: ${firstToken.type}`);
     }
+  }
+
+  // parseArgs ::= `(` (exp (`,` exp)*)? `)`
+  parseArgs(startPosition) {
+    // TODO: implement argument list parsing
+  }
+
+  // parseDotSuffix — handles .field and .method(args) after a primary exp
+  parseDotSuffix(exp, startPosition) {
+    // TODO: implement dot access and method call parsing
   }
 
   // addExp ::= primaryExp ((`+` | `-` | `*` | `/`) primaryExp)*

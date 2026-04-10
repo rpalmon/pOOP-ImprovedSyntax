@@ -23,19 +23,6 @@ function parse(src) {
   return new Parser(tokens).parseProgram();
 }
 
-// Flip a value to false when that feature is implemented
-const SKIP = {
-  booleans:   "not implemented yet",
-  returnStmt: "not implemented yet",
-  println:    "not implemented yet",
-  ifElse:     "not implemented yet",
-  whileBreak: "not implemented yet",
-  newExp:     "not implemented yet",
-  dotAccess:  "not implemented yet",
-  superCall:  "not implemented yet",
-  classes:    "not implemented yet",
-};
-
 describe("Expressions", () => {
   test("parses an integer literal", () => {
     const tokens = new Lexer("x = 42;").tokenize();
@@ -104,58 +91,63 @@ describe("Expressions", () => {
     assert.ok(stmt instanceof AssignStmt);
   });
 
-  test("parses boolean literals in expressions", { skip: SKIP.booleans }, () => {
+  // TODO: add as you implement each expression type
+  // test("parses true literal", () => { ... });
+  test("parses boolean literals in expressions", {skip: "not implemented yet"},() => {
     const tokens = new Lexer("x = true && false;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt.exp instanceof BinopExp);
     assert.ok(stmt.exp.op instanceof AndOp);
   });
-
-  test("parses logical AND", { skip: SKIP.booleans }, () => {
+  // test("parses false literal", () => { ... });
+  test("parses logical AND", {skip: "not implemented yet"}, () => {
     const tokens = new Lexer("x = true && false;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt.exp instanceof BinopExp);
     assert.ok(stmt.exp.op instanceof AndOp);
   });
+  // test("parses new object instantiation", () => { ... });
+  test("parses parenthesized expression", {skip: "not implemented yet"}, () => {
+    const tokens = new Lexer("x = (1 + 2);").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
 
-  test("parses super expression", { skip: SKIP.superCall }, () => {
+    assert.ok(stmt instanceof AssignStmt);
+  });
+  // test("parses this expression", () => { ... });
+  test("parses super expression", {skip: "not implemented yet"}, () => {
     const tokens = new Lexer("x = super;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof AssignStmt);
     assert.ok(stmt.exp instanceof SuperExp);
   });
-
-  test("parses method call", { skip: SKIP.dotAccess }, () => {
+  // test("parses dot access", () => { ... });
+  test("parses method call", {skip: "not implemented yet"}, () => {
     const tokens = new Lexer("x = obj.method();").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof AssignStmt);
     assert.ok(stmt.exp instanceof MethodCallExp);
   });
-
-  test("parses field access", { skip: SKIP.dotAccess }, () => {
+  // test("parses field access", () => { ... });
+   test("parses field access", {skip: "not implemented yet"}, () => {
     const tokens = new Lexer("x = obj.field;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof AssignStmt);
     assert.ok(stmt.exp instanceof FieldAccessExp);
   });
-
-  test("parses method call with arguments", { skip: SKIP.dotAccess }, () => {
-    const tokens = new Lexer("x = obj.method(arg1, arg2);").tokenize();
+  // test("parses method call", () => { ... });
+  test("parses method call with arguments", () => {
+    const tokens = new Lexer("x = obj.method(arg1, arg2);").tokenize(); 
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof AssignStmt);
     assert.ok(stmt.exp instanceof MethodCallExp);
   });
 
-  test("parses new object instantiation", { skip: SKIP.newExp }, () => {
-    // TODO: fill in once newExp is implemented
-    
-  });
 });
 
 describe("Statements", () => {
