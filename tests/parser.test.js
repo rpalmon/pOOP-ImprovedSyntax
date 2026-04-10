@@ -93,7 +93,7 @@ describe("Expressions", () => {
 
   // TODO: add as you implement each expression type
   // test("parses true literal", () => { ... });
-  test("parses boolean literals in expressions", {skip: "not implemented yet"},() => {
+  test("parses boolean literals in expressions",() => {
     const tokens = new Lexer("x = true && false;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
@@ -101,7 +101,7 @@ describe("Expressions", () => {
     assert.ok(stmt.exp.op instanceof AndOp);
   });
   // test("parses false literal", () => { ... });
-  test("parses logical AND", {skip: "not implemented yet"}, () => {
+  test("parses logical AND", () => {
     const tokens = new Lexer("x = true && false;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
@@ -109,14 +109,14 @@ describe("Expressions", () => {
     assert.ok(stmt.exp.op instanceof AndOp);
   });
   // test("parses new object instantiation", () => { ... });
-  test("parses parenthesized expression", {skip: "not implemented yet"}, () => {
+  test("parses parenthesized expression", () => {
     const tokens = new Lexer("x = (1 + 2);").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof AssignStmt);
   });
   // test("parses this expression", () => { ... });
-  test("parses super expression", {skip: "not implemented yet"}, () => {
+  test("parses super expression", () => {
     const tokens = new Lexer("x = super;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
@@ -124,7 +124,7 @@ describe("Expressions", () => {
     assert.ok(stmt.exp instanceof SuperExp);
   });
   // test("parses dot access", () => { ... });
-  test("parses method call", {skip: "not implemented yet"}, () => {
+  test("parses method call", () => {
     const tokens = new Lexer("x = obj.method();").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
@@ -132,7 +132,7 @@ describe("Expressions", () => {
     assert.ok(stmt.exp instanceof MethodCallExp);
   });
   // test("parses field access", () => { ... });
-   test("parses field access", {skip: "not implemented yet"}, () => {
+   test("parses field access", () => {
     const tokens = new Lexer("x = obj.field;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
@@ -153,11 +153,11 @@ describe("Expressions", () => {
 describe("Statements", () => {
   test("parses a variable declaration", () => {
     // TODO: fix TokenType.INT -> INT_TYPE bug first, then uncomment
-    // const program = parse("Int x;");
-    // assert.equal(program.stmts.length, 1);
-    // assert.ok(program.stmts[0] instanceof VarDecStmt);
-    // assert.equal(program.stmts[0].type, "Int");
-    // assert.equal(program.stmts[0].name, "x");
+    const program = parse("Int x;");
+    assert.equal(program.stmts.length, 1);
+    assert.ok(program.stmts[0] instanceof VarDecStmt);
+    assert.equal(program.stmts[0].type, "Int");
+    assert.equal(program.stmts[0].name, "x");
   });
 
   test("parses an assignment statement", () => {

@@ -14,6 +14,7 @@ const SINGLE_CHAR_TOKENS = {
   "-": TokenType.MINUS,
   "*": TokenType.STAR,
   "/": TokenType.SLASH,
+  "&": TokenType.AND,
 };
 
 export class Lexer {
