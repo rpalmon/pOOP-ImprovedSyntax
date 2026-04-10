@@ -70,3 +70,55 @@ export class IntegerLiteral {
   }
 }
 
+export class BooleanLiteral {
+  //kind: BooleanLiteral
+  //value: boolean
+  constructor(value) {
+    this.value = value;
+  }
+}
+
+export class AndOp {
+  //kind: AndOp
+  constructor () {}
+}
+
+export class NewExp {
+  //kind: NewExp
+  //className: string
+  constructor(className) {
+    this.className = className;
+  }
+}
+
+export class ThisExp {
+  //kind: ThisExp
+  constructor () {}
+}
+
+export class SuperExp {
+  //kind: SuperExp
+  constructor () {}
+}
+
+export class MethodCallExp {
+  //kind: MethodCallExp
+  //receiver: Exp
+  //methodName: string
+  //args: Exp[]
+  constructor(receiver, methodName, args) {
+    this.receiver = receiver;
+    this.methodName = methodName;
+    this.args = args;
+  }
+}
+
+export class FieldAccessExp {
+  //kind: FieldAccessExp
+  //receiver: Exp
+  //fieldName: string
+  constructor(receiver, fieldName) {
+    this.receiver = receiver;
+    this.fieldName = fieldName;
+  }
+}
