@@ -1,126 +1,155 @@
 // ast.js
 
-export class ParseResult {
-  constructor(result, nextPos) {
-    this.result = result;
-    this.nextPos = nextPos;
-  }
-}
-
-export class ParseException extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "ParseException";
-  }
-}
-
 // --- AST Expressions ---
-export class IdentifierExp {
-  constructor(name) { this.name = name; }
+export class IdentifierExpr {
+  constructor(name) { 
+    this.kind = "IdentifierExpr";
+    this.name = name; 
+  }
 }
 
-export class IntegerExp {
-  constructor(value) { this.value = value; }
+export class IntegerExpr {
+  constructor(value) { 
+    this.kind = "IntegerExpr";
+    this.value = value; 
+  }
 }
 
-export class StringExp {
-  constructor(value) { this.value = value; }
+export class StringExpr {
+  constructor(value) { 
+    this.kind = "StringExpr";
+    this.value = value; 
+  }
 }
 
-export class ParenExp {
-  constructor(exp) { this.exp = exp; }
+export class ParenExpr {
+  constructor(expr) { 
+    this.kind = "ParenExpr";
+    this.expr = expr; 
+  }
 }
-
-export class BinopExp {
+// op is one of: "+", "-", "*", "/", "&&"
+export class BinaryExpr {
   constructor(left, op, right) {
+    this.kind = "BinaryExpr";
     this.left = left;
     this.op = op;
     this.right = right;
   }
 }
 
-export class BooleanLiteral {
-  constructor(value) { this.value = value; }
+export class BooleanExpr {
+  constructor(value) { 
+    this.kind = "BooleanExpr";
+    this.value = value; 
+  }
 }
 
-export class ThisExp { }
+export class ThisExpr {
+  constructor() {
+    this.kind = "ThisExpr";
+  }
+ }
 
-export class SuperExp { }
+export class SuperExpr {
+  constructor(methodName, args) {
+    this.kind = "SuperExpr";
+    this.methodName = methodName;
+    this.args = args;
+  }
+ }
 
-export class NewExp {
+export class NewExpr {
   constructor(className, args) {
+    this.kind = "NewExpr";
     this.className = className;
     this.args = args;
   }
 }
 
-export class MethodCallExp {
+export class MethodCallExpr {
   constructor(receiver, methodName, args) {
+    this.kind = "MethodCallExpr";
     this.receiver = receiver;
     this.methodName = methodName;
     this.args = args;
   }
 }
 
-export class FieldAccessExp {
+export class FieldAccessExpr {
   constructor(receiver, fieldName) {
+    this.kind = "FieldAccessExpr";
     this.receiver = receiver;
     this.fieldName = fieldName;
   }
 }
 
-// --- Operators ---
-export class PlusOp { type = "Plus"; }
-export class MinusOp { type = "Minus"; }
-export class StarOp { type = "Star"; }
-export class SlashOp { type = "Slash"; }
-export class AndOp { type = "And"; }
-
 // --- AST Statements ---
-export class VarDecStmt {
-  constructor(dataType, name) {
-    this.dataType = dataType;
-    this.type = dataType;
+export class VarDeclStmt {
+  constructor(varType, name, initializer = null) {
+    this.kind = "VarDeclStmt";
+    this.varType = varType;
     this.name = name;
+    this.initializer = initializer;
   }
 }
 
 export class AssignStmt {
-  constructor(name, exp) {
-    this.name = name;
-    this.exp = exp;
+  constructor(target, expr) {
+    this.kind = "AssignStmt";
+    this.target = target;
+    this.expr = expr;
   }
 }
 
 export class ReturnStmt {
-  constructor(exp) { this.exp = exp; }
+  constructor(expr) { 
+    this.kind = "ReturnStmt";
+    this.expr = expr; 
+  }
 }
 
 export class PrintlnStmt {
-  constructor(exp) { this.exp = exp; }
+  constructor(expr) { 
+    this.kind = "PrintlnStmt";
+    this.expr = expr; 
+  }
 }
 
 export class IfStmt {
-  constructor(condition, trueBranch, falseBranch) {
+  constructor(condition, thenBranch, elseBranch) {
+    this.kind = "IfStmt";
     this.condition = condition;
-    this.trueBranch = trueBranch;
-    this.falseBranch = falseBranch;
-    this.thenBranch = trueBranch;
-    this.elseBranch = falseBranch;
+    this.thenBranch = thenBranch;
+    this.elseBranch = elseBranch;
   }
 }
 
 export class WhileStmt {
   constructor(condition, body) {
+    this.kind = "WhileStmt";
     this.condition = condition;
     this.body = body;
   }
 }
 
-export class BreakStmt { }
+export class BreakStmt {
+  constructor() {
+    this.kind = "BreakStmt";
+  }
+}
+
+export class ExprStmt {
+  constructor(expr) {
+    this.kind = "ExprStmt";
+    this.expr = expr;
+  }
+}
 
 export class Program {
-  constructor(stmts) {
+  constructor(classDefs, stmts = []) {
+    this.kind = "Program";
+    this.classDefs = classDefs;
     this.stmts = stmts;
   }
 }
@@ -128,6 +157,7 @@ export class Program {
 // --- AST Class-level nodes ---
 export class ClassDef {
   constructor(name, superclass, init, methods) {
+    this.kind = "ClassDef";
     this.name = name;
     this.superclass = superclass;
     this.init = init;
@@ -137,6 +167,7 @@ export class ClassDef {
 
 export class InitDef {
   constructor(params, body) {
+    this.kind = "InitDef";
     this.params = params;
     this.body = body;
   }
@@ -144,6 +175,7 @@ export class InitDef {
 
 export class MethodDef {
   constructor(name, params, returnType, body) {
+    this.kind = "MethodDef";
     this.name = name;
     this.params = params;
     this.returnType = returnType;
@@ -153,6 +185,7 @@ export class MethodDef {
 
 export class Param {
   constructor(type, name) {
+    this.kind = "Param";
     this.type = type;
     this.name = name;
   }

@@ -2,24 +2,18 @@ import test, { describe } from "node:test";
 import assert from "node:assert/strict";
 
 import { Lexer } from "../src/lexer.js";
-import { Parser } from "../src/parser.js";
+import { Parser, ParseException } from "../src/parser.js";
 import {
-  ParseException,
-  IntegerExp,
-  IdentifierExp,
-  BinopExp,
-  PlusOp,
-  MinusOp,
-  StarOp,
-  SlashOp,
-  AndOp,
-  BooleanLiteral,
-  ThisExp,
-  SuperExp,
-  NewExp,
-  MethodCallExp,
-  FieldAccessExp,
-  VarDecStmt,
+  IntegerExpr,
+  IdentifierExpr,
+  BinaryExpr,
+  BooleanExpr,
+  ThisExpr,
+  SuperExpr,
+  NewExpr,
+  MethodCallExpr,
+  FieldAccessExpr,
+  VarDeclStmt,
   AssignStmt,
   ReturnStmt,
   PrintlnStmt,
@@ -33,19 +27,14 @@ import {
 } from "../src/ast.js";
 
 // Helper: run source through lexer + parser and return the AST Program
-function parse(src) {
-  const tokens = new Lexer(src).tokenize();
-  return new Parser(tokens).parseProgram();
-}
-
 describe("Expressions", () => {
   test("parses an integer literal", () => {
     const tokens = new Lexer("x = 42;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof AssignStmt);
-    assert.ok(stmt.exp instanceof IntegerExp);
-    assert.equal(stmt.exp.value, 42);
+    assert.ok(stmt.expr instanceof IntegerExpr);
+    assert.equal(stmt.expr.value, 42);
   });
 
   test("parses an identifier expression", () => {
@@ -53,40 +42,40 @@ describe("Expressions", () => {
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof AssignStmt);
-    assert.ok(stmt.exp instanceof IdentifierExp);
-    assert.equal(stmt.exp.name, "y");
+    assert.ok(stmt.expr instanceof IdentifierExpr);
+    assert.equal(stmt.expr.name, "y");
   });
 
   test("parses addition", () => {
     const tokens = new Lexer("x = 1 + 2;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
-    assert.ok(stmt.exp instanceof BinopExp);
-    assert.ok(stmt.exp.op instanceof PlusOp);
+    assert.ok(stmt.expr instanceof BinaryExpr);
+    assert.equal(stmt.expr.op, "+");
   });
 
   test("parses subtraction", () => {
     const tokens = new Lexer("x = 5 - 3;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
-    assert.ok(stmt.exp instanceof BinopExp);
-    assert.ok(stmt.exp.op instanceof MinusOp);
+    assert.ok(stmt.expr instanceof BinaryExpr);
+    assert.equal(stmt.expr.op, "-");
   });
 
   test("parses multiplication", () => {
     const tokens = new Lexer("x = 4 * 2;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
-    assert.ok(stmt.exp instanceof BinopExp);
-    assert.ok(stmt.exp.op instanceof StarOp);
+    assert.ok(stmt.expr instanceof BinaryExpr);
+    assert.equal(stmt.expr.op, "*");
   });
 
   test("parses division", () => {
     const tokens = new Lexer("x = 8 / 2;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
-    assert.ok(stmt.exp instanceof BinopExp);
-    assert.ok(stmt.exp.op instanceof SlashOp);
+    assert.ok(stmt.expr instanceof BinaryExpr);
+    assert.equal(stmt.expr.op, "/");
   });
 
   test("parses left-associative chained addition", () => {
@@ -94,9 +83,9 @@ describe("Expressions", () => {
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     // Should be ((1 + 2) + 3)
-    assert.ok(stmt.exp instanceof BinopExp);
-    assert.ok(stmt.exp.left instanceof BinopExp);
-    assert.ok(stmt.exp.op instanceof PlusOp);
+    assert.ok(stmt.expr instanceof BinaryExpr);
+    assert.ok(stmt.expr.left instanceof BinaryExpr);
+    assert.equal(stmt.expr.op, "+");
   });
 
   test("parses parenthesized expression", () => {
@@ -110,57 +99,57 @@ describe("Expressions", () => {
   // test("parses true literal", () => { ... });
   test("parses boolean literals in expressions",() => {
     const tokens = new Lexer("x = true && false;").tokenize();
-    const stmt = new Parser(tokens).parseStmt(0).result;
+    const classDef = new Parser(tokens).parseStmt(0).result;
 
-    assert.ok(stmt.exp instanceof BinopExp);
-    assert.ok(stmt.exp.op instanceof AndOp);
+    assert.ok(classDef.expr instanceof BinaryExpr);
+    assert.equal(classDef.expr.op, "&&");
   });
   // test("parses false literal", () => { ... });
   test("parses logical AND", () => {
     const tokens = new Lexer("x = true && false;").tokenize();
-    const stmt = new Parser(tokens).parseStmt(0).result;
+    const classDef = new Parser(tokens).parseStmt(0).result;
 
-    assert.ok(stmt.exp instanceof BinopExp);
-    assert.ok(stmt.exp.op instanceof AndOp);
+    assert.ok(classDef.expr instanceof BinaryExpr);
+    assert.equal(classDef.expr.op, "&&");
   });
   // test("parses new object instantiation", () => { ... });
   test("parses parenthesized expression", () => {
     const tokens = new Lexer("x = (1 + 2);").tokenize();
-    const stmt = new Parser(tokens).parseStmt(0).result;
+    const classDef = new Parser(tokens).parseStmt(0).result;
 
-    assert.ok(stmt instanceof AssignStmt);
+    assert.ok(classDef instanceof AssignStmt);
   });
   // test("parses this expression", () => { ... });
   test("parses super expression", () => {
     const tokens = new Lexer("x = super;").tokenize();
-    const stmt = new Parser(tokens).parseStmt(0).result;
+    const classDef = new Parser(tokens).parseStmt(0).result;
 
-    assert.ok(stmt instanceof AssignStmt);
-    assert.ok(stmt.exp instanceof SuperExp);
+    assert.ok(classDef instanceof AssignStmt);
+    assert.ok(classDef.expr instanceof SuperExpr);
   });
   // test("parses dot access", () => { ... });
   test("parses method call", () => {
     const tokens = new Lexer("x = obj.method();").tokenize();
-    const stmt = new Parser(tokens).parseStmt(0).result;
+    const classDef = new Parser(tokens).parseStmt(0).result;
 
-    assert.ok(stmt instanceof AssignStmt);
-    assert.ok(stmt.exp instanceof MethodCallExp);
+    assert.ok(classDef instanceof AssignStmt);
+    assert.ok(classDef.expr instanceof MethodCallExpr);
   });
   // test("parses field access", () => { ... });
    test("parses field access", () => {
     const tokens = new Lexer("x = obj.field;").tokenize();
-    const stmt = new Parser(tokens).parseStmt(0).result;
+    const classDef = new Parser(tokens).parseStmt(0).result;
 
-    assert.ok(stmt instanceof AssignStmt);
-    assert.ok(stmt.exp instanceof FieldAccessExp);
+    assert.ok(classDef instanceof AssignStmt);
+    assert.ok(classDef.expr instanceof FieldAccessExpr);
   });
   // test("parses method call", () => { ... });
   test("parses method call with arguments", () => {
     const tokens = new Lexer("x = obj.method(arg1, arg2);").tokenize();
-    const stmt = new Parser(tokens).parseStmt(0).result;
+    const classDef = new Parser(tokens).parseStmt(0).result;
 
-    assert.ok(stmt instanceof AssignStmt);
-    assert.ok(stmt.exp instanceof MethodCallExp);
+    assert.ok(classDef instanceof AssignStmt);
+    assert.ok(classDef.expr instanceof MethodCallExpr);
   });
 
 });
@@ -168,34 +157,40 @@ describe("Expressions", () => {
 describe("Statements", () => {
   test("parses a variable declaration", () => {
     // TODO: fix TokenType.INT -> INT_TYPE bug first, then uncomment
-    const program = parse("Int x;");
-    assert.equal(program.stmts.length, 1);
-    assert.ok(program.stmts[0] instanceof VarDecStmt);
-    assert.equal(program.stmts[0].type, "Int");
-    assert.equal(program.stmts[0].name, "x");
+    const tokens = new Lexer("Int x;").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof VarDeclStmt);
+    assert.equal(stmt.varType, "Int");
+    assert.equal(stmt.name, "x");
   });
 
   test("parses an assignment statement", () => {
-    const program = parse("x = 5;");
-
-    assert.equal(program.stmts.length, 1);
-    assert.ok(program.stmts[0] instanceof AssignStmt);
-    assert.equal(program.stmts[0].name, "x");
+    const tokens = new Lexer("x = 5;").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+    assert.ok(stmt instanceof AssignStmt);
+    assert.equal(stmt.target.name, "x");
   });
 
   test("parses multiple statements", () => {
-    const program = parse("x = 1;\ny = 2;");
+    const tokens = new Lexer("x = 1;\ny = 2;").tokenize();
+    const parser = new Parser(tokens)
 
-    assert.equal(program.stmts.length, 2);
-    assert.ok(program.stmts[0] instanceof AssignStmt);
-    assert.ok(program.stmts[1] instanceof AssignStmt);
+    const firstStmt = parser.parseStmt(0);
+    const secondStmt = parser.parseStmt(firstStmt.nextPos);
+
+    assert.ok(firstStmt.result instanceof AssignStmt);
+    assert.ok(secondStmt.result instanceof AssignStmt);
+    assert.equal(firstStmt.result.target.name, "x");
+    assert.equal(secondStmt.result.target.name, "y");
   });
 
   test("parses empty program", () => {
-    const program = parse("");
+    const tokens = new Lexer("").tokenize();
+    const program = new Parser(tokens).parseProgram();
 
     assert.ok(program instanceof Program);
-    assert.equal(program.stmts.length, 0);
+    assert.equal(program.classDefs.length, 0);
   });
 
   // TODO: add as you implement each statement type
@@ -205,8 +200,8 @@ describe("Statements", () => {
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof ReturnStmt);
-    assert.ok(stmt.exp instanceof IntegerExp);
-    assert.equal(stmt.exp.value, 5);
+    assert.ok(stmt.expr instanceof IntegerExpr);
+    assert.equal(stmt.expr.value, 5);
   });
   // test("parses println statement", () => { ... });
   test("parses println statement", () => {
@@ -214,8 +209,8 @@ describe("Statements", () => {
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof PrintlnStmt);
-    assert.ok(stmt.exp instanceof IdentifierExp);
-    assert.equal(stmt.exp.name, "x");
+    assert.ok(stmt.expr instanceof IdentifierExpr);
+    assert.equal(stmt.expr.name, "x");
   });
   // test("parses if statement", () => { ... });
   test("parses if statement", () => {
@@ -223,7 +218,7 @@ describe("Statements", () => {
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof IfStmt);
-    assert.ok(stmt.condition instanceof IdentifierExp);
+    assert.ok(stmt.condition instanceof IdentifierExpr);
     assert.equal(stmt.condition.name, "x");
     assert.equal(stmt.thenBranch.length, 1);
     assert.ok(stmt.thenBranch[0] instanceof PrintlnStmt);
@@ -234,7 +229,7 @@ describe("Statements", () => {
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof IfStmt);
-    assert.ok(stmt.condition instanceof IdentifierExp);
+    assert.ok(stmt.condition instanceof IdentifierExpr);
     assert.equal(stmt.condition.name, "x");
     assert.equal(stmt.thenBranch.length, 1);
     assert.ok(stmt.thenBranch[0] instanceof PrintlnStmt);
@@ -247,7 +242,7 @@ describe("Statements", () => {
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof WhileStmt);
-    assert.ok(stmt.condition instanceof IdentifierExp);
+    assert.ok(stmt.condition instanceof IdentifierExpr);
     assert.equal(stmt.condition.name, "x");
     assert.equal(stmt.body.length, 1);
     assert.ok(stmt.body[0] instanceof PrintlnStmt);
@@ -267,7 +262,7 @@ describe("Statements", () => {
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof AssignStmt);
-    assert.ok(stmt.exp instanceof SuperExp);
+    assert.ok(stmt.expr instanceof SuperExpr);
   });
 });
 
@@ -276,7 +271,7 @@ describe("Classes", () => {
   // test("parses empty class", () => { ... });
   test("parses empty class", () => {
     const tokens = new Lexer("class Foo {}").tokenize();
-    const stmt = new Parser(tokens).parseStmt(0).result;
+    const stmt = new Parser(tokens).parseClass(0).result;
 
     assert.ok(stmt instanceof ClassDef);
     assert.equal(stmt.name, "Foo");
@@ -284,7 +279,7 @@ describe("Classes", () => {
   // test("parses class with extends", () => { ... });
   test("parses class with extends", () => {
     const tokens = new Lexer("class Foo extends Bar {}").tokenize();
-    const stmt = new Parser(tokens).parseStmt(0).result;
+    const stmt = new Parser(tokens).parseClass(0).result;
 
     assert.ok(stmt instanceof ClassDef);
     assert.equal(stmt.name, "Foo");
@@ -293,7 +288,7 @@ describe("Classes", () => {
   // test("parses class with init", () => { ... });
   test("parses class with init", () => {
     const tokens = new Lexer("class Foo { init() {} }").tokenize();
-    const stmt = new Parser(tokens).parseStmt(0).result;
+    const stmt = new Parser(tokens).parseClass(0).result;
 
     assert.ok(stmt instanceof ClassDef);
     assert.equal(stmt.name, "Foo");
@@ -302,7 +297,7 @@ describe("Classes", () => {
   // test("parses class with method", () => { ... });
   test("parses class with method", () => {
     const tokens = new Lexer("class Foo { method() {} }").tokenize();
-    const stmt = new Parser(tokens).parseStmt(0).result;
+    const stmt = new Parser(tokens).parseClass(0).result;
 
     assert.ok(stmt instanceof ClassDef);
     assert.equal(stmt.name, "Foo");
@@ -310,48 +305,46 @@ describe("Classes", () => {
     assert.ok(stmt.methods[0] instanceof MethodDef);
   });
   // test("parses the full example program", () => { ... });
-    test("parses the full example program", () => {
+  test("parses the full example program", () => {
     const source = `class Animal {
-  init(name) {
-    this.name = name;
-  }
+      init(name) {
+        this.name = name;
+      }
 
-  speak() {
-    println(this.name + " makes a noise.");
-  } }
+      speak() {
+        println(this.name + " makes a noise.");
+      } 
+    }
 
-class Dog extends Animal {
-  speak() {
-    println(this.name + " barks.");
-  } }
-
-let dog = new Dog("Rex");
-dog.speak();`;
+    class Dog extends Animal {
+      speak() {
+        println(this.name + " barks.");
+      } 
+    }`;
 
     const tokens = new Lexer(source).tokenize();
     const program = new Parser(tokens).parseProgram();
 
     assert.ok(program instanceof Program);
-    assert.equal(program.stmts.length, 3);
-    assert.ok(program.stmts[0] instanceof ClassDef);
-    assert.ok(program.stmts[1] instanceof ClassDef);
-    assert.ok(program.stmts[2] instanceof VarDecStmt);
+    assert.equal(program.classDefs.length, 2);
+    assert.ok(program.classDefs[0] instanceof ClassDef);
+    assert.ok(program.classDefs[1] instanceof ClassDef);
   });
 });
 
 describe("Error cases", () => {
   test("throws on missing semicolon in assignment", () => {
     const tokens = new Lexer("x = 5").tokenize();
-    assert.throws(() => new Parser(tokens).parseProgram(), ParseException);
+    assert.throws(() => new Parser(tokens).parseStmt(0), ParseException);
   });
 
   test("throws on unexpected token in expression", () => {
     const tokens = new Lexer("x = ;").tokenize();
-    assert.throws(() => new Parser(tokens).parseProgram(), ParseException);
+    assert.throws(() => new Parser(tokens).parseStmt(0), ParseException);
   });
 
   test("throws on unknown statement start", () => {
     const tokens = new Lexer("123;").tokenize();
-    assert.throws(() => new Parser(tokens).parseProgram(), ParseException);
+    assert.throws(() => new Parser(tokens).parseStmt(0), ParseException);
   });
 });

@@ -3,7 +3,8 @@ class Animal {
   init() {}
 
   method speak() Void {
-    return println("animal");
+    println("animal");
+    return;
   }
 
 }
@@ -15,7 +16,8 @@ class Cat extends Animal {
   }
 
   method speak() Void {
-    return println("cat");
+    println("cat");
+    return;
   }
 
 }
@@ -27,7 +29,8 @@ class Dog extends Animal {
   }
 
   method speak() Void {
-    return println("dog");
+    println("dog");
+    return;
   }
 
 }
@@ -42,3 +45,16 @@ cat.speak();
 dog.speak();
 
 Int x = 5;
+
+Int y;
+y = 10 + 5 * 2;
+
+if (y) {
+  println("yes");
+} else {
+  println("no");
+}
+
+while (y) {
+  break;
+}
