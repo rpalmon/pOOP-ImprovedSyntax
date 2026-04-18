@@ -103,7 +103,7 @@ export class CodeGenerator {
     generateIf(stmt, indentLevel) {
         const indent = this.indent(indentLevel);
         const condition = this.generateExpr(stmt.condition);
-        const lines = ['${indent}if (${condition}) {'];
+        const lines = [`${indent}if (${condition}) {`];
         for(const s of stmt.thenBranch) {
             lines.push(this.generateStmt(s, indentLevel + 1));
         }
@@ -128,5 +128,51 @@ export class CodeGenerator {
         lines.push(`${indent}}`);
         return lines.join("\n");
     }
-    
+
+    // Expressions
+    generateExpr(expr) {
+        switch (expr.kind) {
+            case "IntegerExpr":
+                return String(expr.value);
+            
+            case "StringExpr":
+                return `"${expr.value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t")}"`;
+
+            case "ParenExpr":
+                return '(${this.generateExpr(expr.expr)})';
+
+            case "BinaryExpr":
+                return `${this.generateExpr(expr.left)} ${expr.op} ${this.generateExpr(expr.right)}`;
+
+            case "ThisExpr":
+                return "this";
+
+            case "SuperExpr":
+                if(expr.methodName) {
+                    const args = expr.args.map(a => this.generateExpr(a)).join(", ");
+                    return `super.${expr.methodName}(${args})`;
+                } else if (expr.args && expr.args.length > 0) {
+                    const args = expr.args.map(a => this.generateExpr(a)).join(", ");
+                    return `super(${args})`;
+                }
+                return "super()";
+            
+            case "MethodCallExpr": {
+                const receiver = this.generateExpr(expr.receiver);
+                const args = expr.args.map(a => this.generateExpr(a)).join(", ");
+                return `${receiver}.${expr.methodName}(${args})`;
+            }
+
+            case "FieldAcessExpr":
+                return `${this.generateExpr(expr.receiver)}.${expr.fieldName}`;
+
+            default:
+                throw new CodeGenException('Unknown expression kind: ${expr.kind}');
+        }
+    }
+
+    // Helper
+    indent(level) {
+        return "".repeat(level * this.indentSize);
+    }
 }
