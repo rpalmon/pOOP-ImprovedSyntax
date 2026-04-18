@@ -53,12 +53,80 @@ export class CodeGenerator {
         const indent = this.indent(indentLevel);
         const params = methodDef.params.map(p => p.name).join(", ");
         const lines = [`${indent}${methodDef.name}(${params}) {`];
-    
         for (const stmt of methodDef.body) {
           lines.push(this.generateStmt(stmt, indentLevel + 1));
         }
-    
         lines.push(`${indent}}`);
         return lines.join("\n");
-      }
+    }
+
+    // Statements
+    generateStmt(stmt, indentLevel) {
+        const indent = this.indent(indentLevel);
+
+        switch (stmt.kind) {
+            case "VarDeclStmt":
+                if(stmt.initializer != null) {
+                    return `${indent}let ${stmt.name} = ${this.generateExpr(stmt.initializer)};`;
+                }
+                return '${indent}let &{stmt.name};';
+
+            case "AssignStmt":
+                return `${indent}${this.generateExpr(stmt.target)} = ${this.generateExpr(stmt.expr)};`;
+            
+            case "ReturnStmt":
+                if (stmt.expr !== null && stmt.expr !== undefined) {
+                    return `${indent}return ${this.generateExpr(stmt.expr)};`;
+                }
+                return `${indent}return;`;
+            
+            case "PrintlnStmt":
+                return `${indent}console.log(${this.generateExpr(stmt.expr)});`;
+
+            case "IfStmt":
+                return this.generateIf(stmt, indentLevel);
+
+            case "WhileStmt":
+                return this.generateWhile(stmt, indentLevel);
+
+            case "BreakStmt":
+                return `${indent}break;`;
+
+            case "ExprStmt":
+                return `${indent}${this.generateExpr(stmt.expr)};`;
+            
+            default:
+                throw new CodeGenException('Unknown statement kind: ${stmt.kind}');
+        }
+    }
+
+    generateIf(stmt, indentLevel) {
+        const indent = this.indent(indentLevel);
+        const condition = this.generateExpr(stmt.condition);
+        const lines = ['${indent}if (${condition}) {'];
+        for(const s of stmt.thenBranch) {
+            lines.push(this.generateStmt(s, indentLevel + 1));
+        }
+        if(stmt.elseBranch && stmt.elseBranch.length > 0) {
+            lines.push('${indent}} else {');
+            for (const s of stmt.elseBranch) {
+                lines.push(this.generateStmt(s, indentLevel + 1));
+            }
+        }
+        lines.push('${indnet}}');
+        return lines.join("\n");
+    }
+
+    generateWhile(stmt, indentLevel) {
+        const indent = this.indent(indentLevel);
+        const condition = this.generateExpr(stmt.condition);
+        const lines = [`${indent}while (${condition}) {`];
+
+        for (const s of stmt.body) {
+            lines.push(this.generateStmt(s, indentLevel + 1));
+        }
+        lines.push(`${indent}}`);
+        return lines.join("\n");
+    }
+    
 }
