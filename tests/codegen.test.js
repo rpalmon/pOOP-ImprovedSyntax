@@ -79,7 +79,53 @@ describe("Expressions", () => {
 });
 
 describe("Statements", () => {
-   
+    test("generates variable declaration", () => {
+        assert.equal(compileStmt("Int x;"), "let x;");
+    });
+  
+    test("generates Boolean variable declaration", () => {
+        assert.equal(compileStmt("Boolean flag;"), "let flag;");
+    });
+  
+    test("generates assignment statement", () => {
+        assert.equal(compileStmt("x = 5;"), "x = 5;");
+    });
+  
+    test("generates return with value", () => {
+        assert.equal(compileStmt("return 42;"), "return 42;");
+    });
+  
+    test("generates return void (bare return)", () => {
+        assert.equal(compileStmt("return;"), "return;");
+    });
+  
+    test("generates println as console.log", () => {
+        assert.equal(compileStmt('println("hi");'), 'console.log("hi");');
+    });
+  
+    test("generates if statement without else", () => {
+        const out = compileStmt("if (x) { println(x); }");
+        assert.ok(out.includes("if (x) {"));
+        assert.ok(out.includes("console.log(x);"));
+        assert.ok(!out.includes("else"));
+    });
+  
+    test("generates if/else statement", () => {
+        const out = compileStmt("if (x) { println(x); } else { println(0); }");
+        assert.ok(out.includes("if (x) {"));
+        assert.ok(out.includes("} else {"));
+    });
+  
+    test("generates while statement", () => {
+        const out = compileStmt("while (x) { println(x); }");
+        assert.ok(out.includes("while (x) {"));
+        assert.ok(out.includes("console.log(x);"));
+    });
+  
+    test("generates break inside while", () => {
+        const out = compileStmt("while (x) { break; }");
+        assert.ok(out.includes("break;"));
+    });
 });
 
 describe("Classes", () => {
