@@ -129,7 +129,37 @@ describe("Statements", () => {
 });
 
 describe("Classes", () => {
-   
+    test("generates empty class", () => {
+        const out = compile("class Foo {}");
+        assert.ok(out.includes("class Foo {"));
+    });
+    
+    test("generates class with extends", () => {
+        const out = compile("class Dog extends Animal {}");
+        assert.ok(out.includes("class Dog extends Animal {"));
+    });
+    
+    test("generates class with empty init as constructor", () => {
+        const out = compile("class Foo { init() {} }");
+        assert.ok(out.includes("constructor() {"));
+    });
+    
+    test("generates constructor with params, erasing type annotations", () => {
+        const out = compile("class Foo { init(Int x, Int y) {} }");
+        assert.ok(out.includes("constructor(x, y) {"));
+        assert.ok(!out.includes("Int"));
+    });
+    
+    test("generates method with return type erased", () => {
+        const out = compile("class Foo { method speak() Void {} }");
+        assert.ok(out.includes("speak() {"));
+        assert.ok(!out.includes("Void"));
+    });
+    
+    test("generates super() call in constructor body", () => {
+        const out = compile("class Cat extends Animal { init() { super(); } }");
+        assert.ok(out.includes("super()"));
+    });
 });
 
 describe("Full programs", () => {
