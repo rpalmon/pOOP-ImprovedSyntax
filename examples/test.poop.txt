@@ -1,60 +1,85 @@
 class Animal {
+  String name;
 
-  init() {}
+  init(String name) {
+    this.name = name;
+  }
 
   method speak() Void {
+    println(this.name);
     println("animal");
     return;
   }
-
 }
 
 class Cat extends Animal {
-
-  init() {
+  init(String name) {
     super();
+    this.name = name;
   }
 
   method speak() Void {
+    println(this.name);
     println("cat");
     return;
   }
-
 }
 
 class Dog extends Animal {
-
-  init() {
+  init(String name) {
     super();
+    this.name = name;
   }
 
   method speak() Void {
+    println(this.name);
     println("dog");
     return;
   }
-
 }
 
+Animal animal;
 Animal cat;
 Animal dog;
+Cat realCat;
+Dog realDog;
 
-cat = new Cat();
-dog = new Dog();
+animal = new Animal("generic animal");
+cat = new Cat("milo");
+dog = new Dog("rex");
+realCat = new Cat("luna");
+realDog = new Dog("buddy");
 
+animal.speak();
 cat.speak();
 dog.speak();
+realCat.speak();
+realDog.speak();
+
+println(cat.name);
+println(dog.name);
 
 Int x = 5;
 
 Int y;
 y = 10 + 5 * 2;
 
-if (y) {
+Boolean flag;
+flag = true && false;
+
+if (flag) {
   println("yes");
 } else {
   println("no");
 }
 
+if (y) {
+  println("number works");
+} else {
+  println("number false");
+}
+
 while (y) {
+  println("loop");
   break;
 }

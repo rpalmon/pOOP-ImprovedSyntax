@@ -3,8 +3,8 @@ import { TokenType } from "./tokenTypes.js";
 import {
   IdentifierExpr, IntegerExpr, StringExpr, ParenExpr, BinaryExpr,
   BooleanExpr, NewExpr, ThisExpr, SuperExpr, MethodCallExpr, FieldAccessExpr,
-  VarDeclStmt, AssignStmt, ReturnStmt, PrintlnStmt, IfStmt, WhileStmt, BreakStmt, ExprStmt,
-  ClassDef, InitDef, MethodDef, Param,
+  VarDeclStmt, AssignStmt, ReturnStmt, PrintlnStmt, IfStmt, WhileStmt, BreakStmt, BlockStmt, ExprStmt,
+  ClassDef, InitDef, MethodDef, FieldDef, Param,
   Program
 } from "./ast.js";
 
@@ -144,54 +144,50 @@ export class Parser {
   }
 
   // addExp ::= primaryExp (op primaryExp)* with dot suffix support
-  parseAddExp(startPosition) {
-    let primary = this.parsePrimaryExp(startPosition);
-    let currentExp = primary.result;
-    let currentPosition = primary.nextPos;
-
-    while (this.getToken(currentPosition).type === TokenType.DOT) {
-      const dotResult = this.parseDotSuffix(currentExp, currentPosition);
-      currentExp = dotResult.result;
-      currentPosition = dotResult.nextPos;
-    }
-
+  parseAddExp(pos) {
+    let left = this.parseMultExp(pos);
     while (true) {
-      try {
-        const curToken = this.getToken(currentPosition);
-
-        switch (curToken.type) {
-          case TokenType.PLUS:
-          case TokenType.MINUS:
-          case TokenType.STAR:
-          case TokenType.SLASH:
-          case TokenType.AND: {
-            const opResult = this.parseOp(currentPosition);
-            let nextPrimary = this.parsePrimaryExp(opResult.nextPos);
-            let nextExp = nextPrimary.result;
-            let nextPos = nextPrimary.nextPos;
-
-            while (this.getToken(nextPos).type === TokenType.DOT) {
-              const dotResult = this.parseDotSuffix(nextExp, nextPos);
-              nextExp = dotResult.result;
-              nextPos = dotResult.nextPos;
-            }
-
-            currentExp = new BinaryExpr(currentExp, opResult.result, nextExp);
-            currentPosition = nextPos;
-            break;
-          }
-          default:
-            throw new ParseException(`Not an operator: ${curToken.type}`);
-        }
-      } catch (e) {
-        return new ParseResult(currentExp, currentPosition);
-      }
+      const t = this.getToken(left.nextPos).type;
+      if (t !== TokenType.PLUS && t !== TokenType.MINUS) break;
+      const op = t === TokenType.PLUS ? "+" : "-";
+      const right = this.parseMultExp(left.nextPos + 1);
+      left = new ParseResult(new BinaryExpr(left.result, op, right.result), right.nextPos);
     }
+    return left;
+  }
+
+  parseMultExp(pos) {
+    let left = this.parseCallExp(pos);
+    while (true) {
+      const t = this.getToken(left.nextPos).type;
+      if (t !== TokenType.STAR && t !== TokenType.SLASH) break;
+      const op = t === TokenType.STAR ? "*" : "/";
+      const right = this.parseCallExp(left.nextPos + 1);
+      left = new ParseResult(new BinaryExpr(left.result, op, right.result), right.nextPos);
+    }
+    return left;
+  }
+
+  parseCallExp(pos) {
+    let base = this.parsePrimaryExp(pos);
+    while (this.getToken(base.nextPos).type === TokenType.DOT) {
+      base = this.parseDotSuffix(base.result, base.nextPos);
+    }
+    return base;
   }
 
   // exp ::= addExp
-  parseExp(startPosition) {
-    return this.parseAddExp(startPosition);
+  parseExp(pos) {
+    return this.parseAndExp(pos);
+  }
+
+  parseAndExp(pos) {
+    let left = this.parseAddExp(pos);
+    while (this.getToken(left.nextPos).type === TokenType.AND) {
+      const right = this.parseAddExp(left.nextPos + 1);
+      left = new ParseResult(new BinaryExpr(left.result, "&&", right.result), right.nextPos);
+    }
+    return left;
   }
 
   // stmt ::= vardec | assignment | return | println | if | while | break
@@ -202,23 +198,7 @@ export class Parser {
       case TokenType.INT_TYPE:
 
       case TokenType.BOOLEAN_TYPE:
-
-      case TokenType.VOID_TYPE: {
-        this.assertTokenHereIs(startPosition + 1, TokenType.IDENTIFIER);
-        const idToken = this.getToken(startPosition + 1);
-
-        if (this.getToken(startPosition + 2).type === TokenType.SEMICOLON) {
-          return new ParseResult(new VarDeclStmt(firstToken.lexeme, idToken.lexeme), startPosition + 3);
-        }
-
-        if (this.getToken(startPosition + 2).type === TokenType.ASSIGN) {
-          const exprResult = this.parseExp(startPosition + 3);
-          this.assertTokenHereIs(exprResult.nextPos, TokenType.SEMICOLON);
-          return new ParseResult(new VarDeclStmt(firstToken.lexeme, idToken.lexeme, exprResult.result), exprResult.nextPos + 1);
-        }
-
-        throw new ParseException(`Expected ';' or '=' after variable declaration, got: ${this.getToken(startPosition + 2).type} at line ${this.getToken(startPosition + 2).line}`);
-      }
+        
       case TokenType.IDENTIFIER: {
         //let-style declaration: let x = 5;
         if (firstToken.lexeme === "let") {
@@ -358,7 +338,7 @@ export class Parser {
       currentPosition = stmtResult.nextPos;
     }
 
-    return new ParseResult(stmts, currentPosition + 1);
+    return new ParseResult(new BlockStmt(stmts), currentPosition + 1);
   }
 
   // parseParams ::= `(` (type IDENTIFIER (`,` type IDENTIFIER)*)? `)`
@@ -369,31 +349,16 @@ export class Parser {
 
     if (this.getToken(currentPosition).type !== TokenType.RPAREN) {
       while (true) {
-        const firstToken = this.getToken(currentPosition);
-        const secondToken = this.getToken(currentPosition + 1);
+        const typeResult = this.parseType(currentPosition);
+        this.assertTokenHereIs(typeResult.nextPos, TokenType.IDENTIFIER);
+        const nameToken = this.getToken(typeResult.nextPos);
 
-        switch (firstToken.type) {
-          case TokenType.INT_TYPE:
-          case TokenType.BOOLEAN_TYPE:
-          case TokenType.VOID_TYPE:
-            if (secondToken.type !== TokenType.IDENTIFIER) {
-              throw new ParseException(`Expected parameter name, got: ${secondToken.type} at line ${secondToken.line}`);
-            }
-            params.push(new Param(firstToken.lexeme, secondToken.lexeme));
-            currentPosition += 2;
-            break;
-          case TokenType.IDENTIFIER:
-            params.push(new Param(null, firstToken.lexeme));
-            currentPosition += 1;
-            break;
-          default:
-            throw new ParseException(`Expected parameter, got: ${firstToken.type} at line ${firstToken.line}`);
-        }
+        params.push(new Param(typeResult.result, nameToken.lexeme));
+        currentPosition = typeResult.nextPos + 1;
 
         if (this.getToken(currentPosition).type !== TokenType.COMMA) {
           break;
         }
-
         currentPosition++;
       }
     }
@@ -412,60 +377,22 @@ export class Parser {
 
   // method ::= `method` IDENTIFIER `(` params `)` returnType `{` stmt* `}`
   parseMethod(startPosition) {
-    const firstToken = this.getToken(startPosition);
-    let methodName = null;
-    let paramsStart = null;
-    let currentPosition = startPosition;
+    this.assertTokenHereIs(startPosition, TokenType.METHOD);
+    this.assertTokenHereIs(startPosition + 1, TokenType.IDENTIFIER);
 
-    switch (firstToken.type) {
-      case TokenType.METHOD: {
-        const nextToken = this.getToken(startPosition + 1);
-        switch (nextToken.type) {
-          case TokenType.IDENTIFIER:
-            methodName = nextToken.lexeme;
-            paramsStart = startPosition + 2;
-            break;
-          case TokenType.LPAREN:
-            methodName = "method";
-            paramsStart = startPosition + 1;
-            break;
-          default:
-            throw new ParseException(`Expected method name, got: ${nextToken.type} at line ${nextToken.line}`);
-        }
-        break;
-      }
-      case TokenType.IDENTIFIER:
-        methodName = firstToken.lexeme;
-        paramsStart = startPosition + 1;
-        break;
-      default:
-        throw new ParseException(`Expected method definition, got: ${firstToken.type} at line ${firstToken.line}`);
-    }
+    const methodName = this.getToken(startPosition + 1).lexeme;
+    const paramsResult = this.parseParams(startPosition + 2);
+    const returnTypeResult = this.parseType(paramsResult.nextPos);
+    const bodyResult = this.parseBody(returnTypeResult.nextPos);
 
-    const paramsResult = this.parseParams(paramsStart);
-    currentPosition = paramsResult.nextPos;
-
-    let returnType = null;
-    if (
-      this.getToken(currentPosition).type === TokenType.INT_TYPE ||
-      this.getToken(currentPosition).type === TokenType.BOOLEAN_TYPE ||
-      this.getToken(currentPosition).type === TokenType.VOID_TYPE ||
-      this.getToken(currentPosition).type === TokenType.IDENTIFIER
-    ) {
-      if (this.getToken(currentPosition + 1).type === TokenType.LBRACE) {
-        returnType = this.getToken(currentPosition).lexeme;
-        currentPosition += 1;
-      }
-    }
-
-    const bodyResult = this.parseBody(currentPosition);
-    return new ParseResult(new MethodDef(methodName, paramsResult.result, returnType, bodyResult.result), bodyResult.nextPos);
+    return new ParseResult(new MethodDef(methodName, paramsResult.result, returnTypeResult.result, bodyResult.result), bodyResult.nextPos);
   }
 
-  // class ::= `class` IDENTIFIER (`extends` IDENTIFIER)? `{` init? method* `}`
+  // class ::= `class` IDENTIFIER (`extends` IDENTIFIER)? `{` field* init method* `}`
   parseClass(startPosition) {
     this.assertTokenHereIs(startPosition, TokenType.CLASS);
     this.assertTokenHereIs(startPosition + 1, TokenType.IDENTIFIER);
+
     const idToken = this.getToken(startPosition + 1);
     let currentPosition = startPosition + 2;
     let superClass = null;
@@ -479,15 +406,31 @@ export class Parser {
     this.assertTokenHereIs(currentPosition, TokenType.LBRACE);
     currentPosition++;
 
-    let initDef = null;
-    if (this.getToken(currentPosition).type === TokenType.INIT) {
-      const initResult = this.parseInit(currentPosition);
-      initDef = initResult.result;
-      currentPosition = initResult.nextPos;
+    const fields = [];
+
+    while (
+      this.getToken(currentPosition).type === TokenType.INT_TYPE ||
+      this.getToken(currentPosition).type === TokenType.BOOLEAN_TYPE ||
+      this.getToken(currentPosition).type === TokenType.IDENTIFIER
+    ) {
+      const typeResult = this.parseType(currentPosition);
+      this.assertTokenHereIs(typeResult.nextPos, TokenType.IDENTIFIER);
+      const nameToken = this.getToken(typeResult.nextPos);
+      this.assertTokenHereIs(typeResult.nextPos + 1, TokenType.SEMICOLON);
+      fields.push(new FieldDef(typeResult.result, nameToken.lexeme));
+      currentPosition = typeResult.nextPos + 2;
     }
 
+    if (this.getToken(currentPosition).type !== TokenType.INIT) {
+      throw new ParseException(`Expected 'init' method in class definition, got: ${this.getToken(currentPosition).type} at line ${this.getToken(currentPosition).line}`);
+    }
+
+    const initResult = this.parseInit(currentPosition);
+    const initDef = initResult.result;
+    currentPosition = initResult.nextPos;
+
     const methodDefs = [];
-    while (this.getToken(currentPosition).type === TokenType.METHOD || this.getToken(currentPosition).type === TokenType.IDENTIFIER) {
+    while (this.getToken(currentPosition).type === TokenType.METHOD) {
       const methodResult = this.parseMethod(currentPosition);
       methodDefs.push(methodResult.result);
       currentPosition = methodResult.nextPos;
@@ -496,7 +439,23 @@ export class Parser {
     this.assertTokenHereIs(currentPosition, TokenType.RBRACE);
     currentPosition++;
 
-    return new ParseResult(new ClassDef(idToken.lexeme, superClass, initDef, methodDefs), currentPosition);
+    return new ParseResult(new ClassDef(idToken.lexeme, superClass, fields, initDef, methodDefs), currentPosition);
+  }
+
+  parseType(startPosition) {
+    const token = this.getToken(startPosition);
+
+    switch (token.type) {
+      case TokenType.INT_TYPE:
+      case TokenType.BOOLEAN_TYPE:
+      case TokenType.VOID_TYPE:
+      case TokenType.IDENTIFIER:
+      return new ParseResult(token.lexeme, startPosition + 1);
+      default:
+        throw new ParseException(
+          `Expected type, got: ${token.type} at line ${token.line}`
+        );
+    }
   }
 
   parseProgram() {

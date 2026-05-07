@@ -20,9 +20,11 @@ import {
   IfStmt,
   WhileStmt,
   BreakStmt,
+  BlockStmt,
   ClassDef,
   InitDef,
   MethodDef,
+  FieldDef,
   Program,
 } from "../src/ast.js";
 
@@ -220,8 +222,9 @@ describe("Statements", () => {
     assert.ok(stmt instanceof IfStmt);
     assert.ok(stmt.condition instanceof IdentifierExpr);
     assert.equal(stmt.condition.name, "x");
-    assert.equal(stmt.thenBranch.length, 1);
-    assert.ok(stmt.thenBranch[0] instanceof PrintlnStmt);
+    assert.ok(stmt.thenBranch instanceof BlockStmt);
+    assert.equal(stmt.thenBranch.stmts.length, 1);
+    assert.ok(stmt.thenBranch.stmts[0] instanceof PrintlnStmt);
   });
   // test("parses if/else statement", () => { ... });
   test("parses if/else statement", () => {
@@ -231,10 +234,12 @@ describe("Statements", () => {
     assert.ok(stmt instanceof IfStmt);
     assert.ok(stmt.condition instanceof IdentifierExpr);
     assert.equal(stmt.condition.name, "x");
-    assert.equal(stmt.thenBranch.length, 1);
-    assert.ok(stmt.thenBranch[0] instanceof PrintlnStmt);
-    assert.equal(stmt.elseBranch.length, 1);
-    assert.ok(stmt.elseBranch[0] instanceof PrintlnStmt);
+    assert.ok(stmt.thenBranch instanceof BlockStmt);
+    assert.equal(stmt.thenBranch.stmts.length, 1);
+    assert.ok(stmt.thenBranch.stmts[0] instanceof PrintlnStmt);
+    assert.ok(stmt.elseBranch instanceof BlockStmt);
+    assert.equal(stmt.elseBranch.stmts.length, 1);
+    assert.ok(stmt.elseBranch.stmts[0] instanceof PrintlnStmt);
   });
   // test("parses while statement", () => { ... });
   test("parses while statement", () => {
@@ -244,8 +249,9 @@ describe("Statements", () => {
     assert.ok(stmt instanceof WhileStmt);
     assert.ok(stmt.condition instanceof IdentifierExpr);
     assert.equal(stmt.condition.name, "x");
-    assert.equal(stmt.body.length, 1);
-    assert.ok(stmt.body[0] instanceof PrintlnStmt);
+    assert.ok(stmt.body instanceof BlockStmt);
+    assert.equal(stmt.body.stmts.length, 1);
+    assert.ok(stmt.body.stmts[0] instanceof PrintlnStmt);
   });
   // test("parses break statement", () => { ... });
   test("parses break statement", () => {
@@ -253,8 +259,9 @@ describe("Statements", () => {
     const stmt = new Parser(tokens).parseStmt(0).result;
 
     assert.ok(stmt instanceof WhileStmt);
-    assert.equal(stmt.body.length, 1);
-    assert.ok(stmt.body[0] instanceof BreakStmt);
+    assert.ok(stmt.body instanceof BlockStmt);
+    assert.equal(stmt.body.stmts.length, 1);
+    assert.ok(stmt.body.stmts[0] instanceof BreakStmt);
   });
   // test("parses super call", () => { ... });
   test("parses super call", () => {
@@ -269,21 +276,14 @@ describe("Statements", () => {
 describe("Classes", () => {
   // TODO: add as you implement class parsing
   // test("parses empty class", () => { ... });
-  test("parses empty class", () => {
+  test("throws on class without init", () => {
     const tokens = new Lexer("class Foo {}").tokenize();
-    const stmt = new Parser(tokens).parseClass(0).result;
-
-    assert.ok(stmt instanceof ClassDef);
-    assert.equal(stmt.name, "Foo");
+    assert.throws(() => new Parser(tokens).parseClass(0), ParseException);
   });
   // test("parses class with extends", () => { ... });
-  test("parses class with extends", () => {
+  test("throws on class with extends but no init", () => {
     const tokens = new Lexer("class Foo extends Bar {}").tokenize();
-    const stmt = new Parser(tokens).parseClass(0).result;
-
-    assert.ok(stmt instanceof ClassDef);
-    assert.equal(stmt.name, "Foo");
-    assert.equal(stmt.superclass, "Bar");
+    assert.throws(() => new Parser(tokens).parseClass(0), ParseException);
   });
   // test("parses class with init", () => { ... });
   test("parses class with init", () => {
@@ -296,31 +296,91 @@ describe("Classes", () => {
   });
   // test("parses class with method", () => { ... });
   test("parses class with method", () => {
-    const tokens = new Lexer("class Foo { method() {} }").tokenize();
+    const tokens = new Lexer("class Foo { init() {} method speak() Void {} }").tokenize();
     const stmt = new Parser(tokens).parseClass(0).result;
 
     assert.ok(stmt instanceof ClassDef);
     assert.equal(stmt.name, "Foo");
     assert.equal(stmt.methods.length, 1);
     assert.ok(stmt.methods[0] instanceof MethodDef);
+    assert.equal(stmt.methods[0].name, "speak");
+    assert.equal(stmt.methods[0].returnType, "Void");
   });
+
+  test("parses class fields", () => {
+    const tokens = new Lexer(`
+      class Foo {
+        String name;
+        Int age;
+
+        init() {}
+      }
+  ` ).tokenize();
+
+    const stmt = new Parser(tokens).parseClass(0).result;
+
+    assert.ok(stmt instanceof ClassDef);
+    assert.equal(stmt.fields.length, 2);
+
+    assert.ok(stmt.fields[0] instanceof FieldDef);
+    assert.equal(stmt.fields[0].type, "String");
+    assert.equal(stmt.fields[0].name, "name");
+
+    assert.ok(stmt.fields[1] instanceof FieldDef);
+    assert.equal(stmt.fields[1].type, "Int");
+    assert.equal(stmt.fields[1].name, "age");
+  });
+
+  test("parses Boolean variable declaration", () => {
+    const tokens = new Lexer("Boolean flag;").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof VarDeclStmt);
+    assert.equal(stmt.varType, "Boolean");
+    assert.equal(stmt.name, "flag");
+  });
+
+  test("parses class-name variable declaration", () => {
+    const tokens = new Lexer("Animal pet;").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof VarDeclStmt);
+    assert.equal(stmt.varType, "Animal");
+    assert.equal(stmt.name, "pet");
+  });
+
+  test("parses new object instantiation", () => {
+    const tokens = new Lexer("x = new Dog();").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof AssignStmt);
+    assert.ok(stmt.expr instanceof NewExpr);
+    assert.equal(stmt.expr.className, "Dog");
+  });
+
   // test("parses the full example program", () => { ... });
   test("parses the full example program", () => {
     const source = `class Animal {
-      init(name) {
+      String name;
+
+      init(String name) {
         this.name = name;
       }
 
-      speak() {
+      method speak() Void {
         println(this.name + " makes a noise.");
       } 
     }
 
     class Dog extends Animal {
-      speak() {
-        println(this.name + " barks.");
-      } 
-    }`;
+      init(String name) {
+        this.name = name;
+      }
+
+      method speak() Void {
+      println(this.name + " barks.");
+    } 
+  }`;
 
     const tokens = new Lexer(source).tokenize();
     const program = new Parser(tokens).parseProgram();

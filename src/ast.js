@@ -139,6 +139,13 @@ export class BreakStmt {
   }
 }
 
+export class BlockStmt {
+  constructor (stmts) {
+    this.kind = "BlockStmt";
+    this.stmts = stmts;
+  }
+}
+
 export class ExprStmt {
   constructor(expr) {
     this.kind = "ExprStmt";
@@ -156,10 +163,11 @@ export class Program {
 
 // --- AST Class-level nodes ---
 export class ClassDef {
-  constructor(name, superclass, init, methods) {
+  constructor(name, superclass, fields, init, methods) {
     this.kind = "ClassDef";
     this.name = name;
     this.superclass = superclass;
+    this.fields = fields;
     this.init = init;
     this.methods = methods;
   }
@@ -183,6 +191,15 @@ export class MethodDef {
   }
 }
 
+export class FieldDef {
+  constructor(type, name, initializer = null) {
+    this.kind = "FieldDef";
+    this.type = type;
+    this.name = name;
+    this.initializer = initializer;
+  }
+}
+
 export class Param {
   constructor(type, name) {
     this.kind = "Param";
@@ -190,5 +207,3 @@ export class Param {
     this.name = name;
   }
 }
-
-
