@@ -25,8 +25,8 @@ export class CodeGenerator {
     // Classes
     generateClass(classDef){
         const lines = [];
-        const superclause = classDef.superclass ? ' extends ${classDef.superclass}' : "";
-        lines.push ('class ${classDef.name}${superclause} {');
+        const superclause = classDef.superclass ? ` extends ${classDef.superclass}` : "";
+        lines.push(`class ${classDef.name}${superclause} {`);
         if (classDef.init) {
             lines.push(this.generateInit(classDef.init, 1));
         }
@@ -42,7 +42,7 @@ export class CodeGenerator {
         const innerIndent = this.indent(indentLevel + 1);
         const params = initDef.params.map(p => p.name).join(", ");
         const lines = [`${indent}constructor(${params}) {`];
-        for (const stmt of initDef.body) {
+        for (const stmt of initDef.body.stmts) {
           lines.push(this.generateStmt(stmt, indentLevel + 1));
         }
         lines.push(`${indent}}`);
@@ -53,7 +53,7 @@ export class CodeGenerator {
         const indent = this.indent(indentLevel);
         const params = methodDef.params.map(p => p.name).join(", ");
         const lines = [`${indent}${methodDef.name}(${params}) {`];
-        for (const stmt of methodDef.body) {
+        for (const stmt of methodDef.body.stmts) {
           lines.push(this.generateStmt(stmt, indentLevel + 1));
         }
         lines.push(`${indent}}`);
@@ -69,7 +69,7 @@ export class CodeGenerator {
                 if(stmt.initializer != null) {
                     return `${indent}let ${stmt.name} = ${this.generateExpr(stmt.initializer)};`;
                 }
-                return '${indent}let &{stmt.name};';
+                return `${indent}let ${stmt.name};`;
 
             case "AssignStmt":
                 return `${indent}${this.generateExpr(stmt.target)} = ${this.generateExpr(stmt.expr)};`;
@@ -96,7 +96,7 @@ export class CodeGenerator {
                 return `${indent}${this.generateExpr(stmt.expr)};`;
             
             default:
-                throw new CodeGenException('Unknown statement kind: ${stmt.kind}');
+                throw new CodeGenException(`Unknown statement kind: ${stmt.kind}`);
         }
     }
 
@@ -104,16 +104,16 @@ export class CodeGenerator {
         const indent = this.indent(indentLevel);
         const condition = this.generateExpr(stmt.condition);
         const lines = [`${indent}if (${condition}) {`];
-        for(const s of stmt.thenBranch) {
+        for(const s of stmt.thenBranch.stmts) {
             lines.push(this.generateStmt(s, indentLevel + 1));
         }
-        if(stmt.elseBranch && stmt.elseBranch.length > 0) {
-            lines.push('${indent}} else {');
-            for (const s of stmt.elseBranch) {
+        if(stmt.elseBranch && stmt.elseBranch.stmts.length > 0) {
+            lines.push(`${indent}} else {`);
+            for (const s of stmt.elseBranch.stmts) {
                 lines.push(this.generateStmt(s, indentLevel + 1));
             }
         }
-        lines.push('${indnet}}');
+        lines.push(`${indent}}`);
         return lines.join("\n");
     }
 
@@ -122,7 +122,7 @@ export class CodeGenerator {
         const condition = this.generateExpr(stmt.condition);
         const lines = [`${indent}while (${condition}) {`];
 
-        for (const s of stmt.body) {
+        for (const s of stmt.body.stmts) {
             lines.push(this.generateStmt(s, indentLevel + 1));
         }
         lines.push(`${indent}}`);
@@ -139,7 +139,7 @@ export class CodeGenerator {
                 return `"${expr.value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t")}"`;
 
             case "ParenExpr":
-                return '(${this.generateExpr(expr.expr)})';
+                return `(${this.generateExpr(expr.expr)})`;
 
             case "BinaryExpr":
                 return `${this.generateExpr(expr.left)} ${expr.op} ${this.generateExpr(expr.right)}`;
@@ -163,16 +163,27 @@ export class CodeGenerator {
                 return `${receiver}.${expr.methodName}(${args})`;
             }
 
-            case "FieldAcessExpr":
+            case "FieldAccessExpr":
                 return `${this.generateExpr(expr.receiver)}.${expr.fieldName}`;
 
+            case "IdentifierExpr":
+                return expr.name;
+
+            case "BooleanExpr":
+                return expr.value ? "true" : "false";   
+            
+            case "NewExpr": {
+                const newArgs = expr.args.map(a => this.generateExpr(a)).join(", ");
+                return `new ${expr.className}(${newArgs})`;
+            }
+
             default:
-                throw new CodeGenException('Unknown expression kind: ${expr.kind}');
+                throw new CodeGenException(`Unknown expression kind: ${expr.kind}`);
         }
     }
 
     // Helper
     indent(level) {
-        return "".repeat(level * this.indentSize);
+        return " ".repeat(level * this.indentSize);
     }
 }

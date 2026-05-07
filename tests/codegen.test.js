@@ -130,17 +130,17 @@ describe("Statements", () => {
 
 describe("Classes", () => {
     test("generates empty class", () => {
-        const out = compile("class Foo {}");
+        const out = compile("class Foo {init() {}}");
         assert.ok(out.includes("class Foo {"));
     });
     
     test("generates class with extends", () => {
-        const out = compile("class Dog extends Animal {}");
+        const out = compile("class Dog extends Animal { init() { super(); } }");
         assert.ok(out.includes("class Dog extends Animal {"));
     });
     
     test("generates class with empty init as constructor", () => {
-        const out = compile("class Foo { init() {} }");
+        const out = compile("class Foo { init() {} method speak() Void {} }");
         assert.ok(out.includes("constructor() {"));
     });
     
@@ -151,7 +151,7 @@ describe("Classes", () => {
     });
     
     test("generates method with return type erased", () => {
-        const out = compile("class Foo { method speak() Void {} }");
+        const out = compile("class Foo { init() {} method speak() Void {} }");
         assert.ok(out.includes("speak() {"));
         assert.ok(!out.includes("Void"));
     });
@@ -167,16 +167,16 @@ describe("Full programs", () => {
     const src = `
     class Animal {
         init() {}
-        method speak() Void { return println(0); }
+        method speak() Void { println(0); return; }
     }
     class Cat extends Animal {
         init() { super(); }
-        method speak() Void { return println(1); }
+        method speak() Void { println(1); return; }
     }
       
     class Dog extends Animal {
         init() { super(); }
-        method speak() Void { return println(2); }
+        method speak() Void { println(2); return; }
     } 
       Animal cat;
     Animal dog;
