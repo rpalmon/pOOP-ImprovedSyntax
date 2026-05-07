@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Lexer } from "./lexer.js";
 import { Parser } from "./parser.js"; // <-- Added Parser import
+import { CodeGenerator } from ".codegen.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,6 +32,11 @@ try {
 
     console.log("--- ABSTRACT SYNTAX TREE (AST) ---");
     console.log(JSON.stringify(ast, null, 2));
+
+    // --- 3. CODE GENERATOR ---
+    const codegen = new CodeGenerator();
+    const jsOutput = codegen.generateProgram(ast);
+    console.log(jsOutput);
 
 } catch (err) {
     console.error(`\nFailed to process file: ${inputPath}`);
