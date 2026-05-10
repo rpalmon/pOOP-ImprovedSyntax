@@ -144,19 +144,29 @@ export class Typechecker {
         methodEnv.set(param.name, param.type);
       }
       this.typecheckBody(method.body, methodEnv, method.returnType, cls.name);
+
+      //non-void methods must end with a return
+      if (method.returnType !== VOID) {
+        const stmts = method.body.stmts;
+        if(stmts.length === 0 || !(stmts[stmts.length-1] instanceof ReturnStmt)) {
+          throw new TypeErrorException(
+            `Method '${cls.name}.${method.name}' has non-void return type but does not end with a return statement`
+          );
+        }
+      }
     }
   }
 
   // typecheck a block, giving it its own scope layered on top of env
-  typecheckBody(block, env, expectedReturn, currentClass) {
+  typecheckBody(block, env, expectedReturn, currentClass, inLoop = false) {
     const localEnv = new Map(env);
     for (const stmt of block.stmts) {
-      this.typecheckStmt(stmt, localEnv, expectedReturn, currentClass);
+      this.typecheckStmt(stmt, localEnv, expectedReturn, currentClass, inLoop);
     }
   }
 
   // stmt ::= vardec | assignment | return | println | if | while | break | exprstmt | block
-  typecheckStmt(stmt, env, expectedReturn, currentClass) {
+  typecheckStmt(stmt, env, expectedReturn, currentClass, inLoop = false) {
     if (stmt instanceof VarDeclStmt) {
       if (stmt.initializer !== null) {
         const initType = this.typecheckExp(stmt.initializer, env, currentClass);
@@ -182,6 +192,7 @@ export class Typechecker {
         if (expectedReturn === null) {
           throw new TypeErrorException(`Return statement outside of a method`);
         }
+        //check return type against expected return type of the method
         this.assertSubtype(retType, expectedReturn, "return statement");
       }
 
@@ -194,9 +205,9 @@ export class Typechecker {
       if (condType !== BOOL) {
         throw new TypeErrorException(`If condition must be Boolean, got '${condType}'`);
       }
-      this.typecheckBody(stmt.thenBranch, env, expectedReturn, currentClass);
+      this.typecheckBody(stmt.thenBranch, env, expectedReturn, currentClass, inLoop);
       if (stmt.elseBranch !== null) {
-        this.typecheckBody(stmt.elseBranch, env, expectedReturn, currentClass);
+        this.typecheckBody(stmt.elseBranch, env, expectedReturn, currentClass, inLoop);
       }
 
     } else if (stmt instanceof WhileStmt) {
@@ -204,10 +215,12 @@ export class Typechecker {
       if (condType !== BOOL) {
         throw new TypeErrorException(`While condition must be Boolean, got '${condType}'`);
       }
-      this.typecheckBody(stmt.body, env, expectedReturn, currentClass);
+      this.typecheckBody(stmt.body, env, expectedReturn, currentClass, true);
 
     } else if (stmt instanceof BreakStmt) {
-      //valid inside while loops
+      if (!inLoop) {
+        throw new TypeErrorException(`'break' used outside of a while loop`);
+      }
 
     } else if (stmt instanceof ExprStmt) {
       this.typecheckExp(stmt.expr, env, currentClass);
@@ -305,6 +318,8 @@ export class Typechecker {
       return sig.returnType;
     }
 
+    const superEntry = this.classTable.get(superClass);
+    this.checkArgs(exp.args, superEntry.initParamTypes, `super(...)`, env, currentClass);
     return superClass;
   }
 

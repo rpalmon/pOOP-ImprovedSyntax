@@ -366,6 +366,24 @@ describe("Inheritance", () => {
       a = d.age;
     `);
   });
+
+  test("accepts assigning subclass to superclass variable", () => {
+    check(`
+      class Animal { init() {} }
+      class Dog extends Animal { init() {} }
+      Animal a;
+      a = new Dog();
+    `);
+  });
+
+  test("rejects assigning superclass to subclass variable", () => {
+    checkThrows(`
+      class Animal { init() {} }
+      class Dog extends Animal { init() {} }
+      Dog d;
+      d = new Animal();
+    `);
+  });
 });
 
 describe("Full programs", () => {
