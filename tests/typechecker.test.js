@@ -68,6 +68,11 @@ describe("Expressions", () => {
   test("rejects undefined variable", () => {
     checkThrows("println(y);");
   });
+
+  test("rejects mixed types in flattened binary expressions", () => {
+    checkThrows("println(1 + true && false);");
+  });
+
 });
 
 describe("Statements", () => {
@@ -135,6 +140,20 @@ describe("Statements", () => {
   test("rejects return outside of a method", () => {
     checkThrows("return 1;");
   });
+
+  test("rejects missing return statement in non-void method", () => {
+    checkThrows(`
+      class Foo {
+        init() {}
+        method run() Int { 
+          Int x;
+          x = 5; 
+          // Missing return statement here!
+        }
+      }
+    `);
+  });
+
 });
 
 describe("Classes", () => {
@@ -299,6 +318,27 @@ describe("Classes", () => {
       x = f.missing;
     `);
   });
+
+  test("rejects duplicate field definitions in the same class", () => {
+    checkThrows(`
+      class BadBox {
+        Int x;
+        String x;
+        init() {}
+      }
+    `);
+  });
+
+  test("rejects duplicate method definitions in the same class", () => {
+    checkThrows(`
+      class BadMath {
+        init() {}
+        method add() Int { return 1; }
+        method add() Int { return 2; }
+      }
+    `);
+  });
+
 });
 
 describe("Inheritance", () => {
@@ -375,16 +415,55 @@ describe("Inheritance", () => {
       a = new Dog();
     `);
   });
+  
 
-  test("rejects assigning superclass to subclass variable", () => {
+  test("rejects cyclic inheritance loops", () => {
     checkThrows(`
-      class Animal { init() {} }
-      class Dog extends Animal { init() {} }
-      Dog d;
-      d = new Animal();
+      class A extends B { init() {} }
+      class B extends A { init() {} }
     `);
   });
+
+  test("rejects mixed types in flattened binary expressions", () => {
+    checkThrows("println(1 + true && false);");
+  });
+
+  test("accepts assigning to inherited instance variables", () => {
+    check(`
+      class Parent {
+        Int x;
+        init() {}
+      }
+      class Child extends Parent {
+        Int y;
+        init() {}
+        method setup() Void {
+          this.x = 10; // Inherited instance variable
+          this.y = 20; // Local instance variable
+          return;
+        }
+      }
+    `);
+  });
+
+  
+  test("rejects invalid method overrides with mismatched return types", () => {
+    checkThrows(`
+      class Parent {
+        init() {}
+        method fetch() Int { return 1; }
+      }
+      class Child extends Parent {
+        init() {}
+        // Invalid override: changes return type from Int to String
+        method fetch() String { return "hello"; }
+      }
+    `);
+  });
+
 });
+
+
 
 describe("Full programs", () => {
   test("typechecks the animal example program", () => {

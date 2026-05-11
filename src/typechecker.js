@@ -37,7 +37,10 @@ export class Typechecker {
 
   // entry point: build class table first, then check everything
   typecheck(program) {
+    this.checkDuplicateMembers(program.classDefs);
     this.buildClassTable(program.classDefs);
+    this.checkForCycles();
+    this.checkOverrides();
 
     for (const classDef of program.classDefs) {
       this.typecheckClass(classDef);
@@ -363,6 +366,75 @@ export class Typechecker {
     for (let i = 0; i < argExps.length; i++) {
       const argType = this.typecheckExp(argExps[i], env, currentClass);
       this.assertSubtype(argType, paramTypes[i], `argument ${i + 1} of '${callSite}'`);
+    }
+  }
+
+  // check for circular inheritance to prevent infinite loops
+  checkForCycles() {
+    for (const className of this.classTable.keys()) {
+      const visited = new Set();
+      let current = className;
+      while (current !== null) {
+        if (visited.has(current)) {
+          throw new TypeErrorException(`Inheritance cycle detected: '${current}'`);
+        }
+        visited.add(current);
+        const entry = this.classTable.get(current);
+        current = entry.superclass;
+      }
+    }
+  }
+
+  // checks that a class doesn't define two fields or two methods with the same name
+  checkDuplicateMembers(classDefs) {
+    for (const cls of classDefs) {
+      const seenFields = new Set();
+      for (const field of cls.fields) {
+        if (seenFields.has(field.name)) {
+          throw new TypeErrorException(`Duplicate field '${field.name}' in class '${cls.name}'`);
+        }
+        seenFields.add(field.name);
+      }
+
+      const seenMethods = new Set();
+      for (const method of cls.methods) {
+        if (seenMethods.has(method.name)) {
+          throw new TypeErrorException(`Duplicate method '${method.name}' in class '${cls.name}'`);
+        }
+        seenMethods.add(method.name);
+      }
+    }
+  }
+
+  // makes sure subclass methods match the signatures of superclass methods they override
+  checkOverrides() {
+    for (const [className, entry] of this.classTable) {
+      if (entry.superclass === null) continue;
+
+      let parentName = entry.superclass;
+      while (parentName !== null) {
+        const parentEntry = this.classTable.get(parentName);
+
+        for (const [methodName, childSig] of entry.methods) {
+          if (parentEntry.methods.has(methodName)) {
+            const parentSig = parentEntry.methods.get(methodName);
+
+            if (childSig.returnType !== parentSig.returnType) {
+              throw new TypeErrorException(`Overridden method '${className}.${methodName}' return type mismatch`);
+            }
+
+            if (childSig.paramTypes.length !== parentSig.paramTypes.length) {
+              throw new TypeErrorException(`Overridden method '${className}.${methodName}' parameter count mismatch`);
+            }
+            for (let i = 0; i < childSig.paramTypes.length; i++) {
+              if (childSig.paramTypes[i] !== parentSig.paramTypes[i]) {
+                throw new TypeErrorException(`Overridden method '${className}.${methodName}' parameter type mismatch at arg ${i + 1}`);
+              }
+            }
+          }
+        }
+        parentName = parentEntry.superclass;
+      }
     }
   }
 }
