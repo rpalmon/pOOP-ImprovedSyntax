@@ -183,24 +183,27 @@ export class Lexer {
   nextToken() {
     this.skipWhitespace();
     const ch = this.peek();
-    if(ch === "&" && this.peek(1) === "&") {
+
+    // Accurately capture line/col starting coordinates before consuming multi-char tokens
+    if (ch === "&" && this.peek(1) === "&") {
+      const startLine = this.line;
+      const startCol = this.col;
       this.advance();
       this.advance();
-      return this.makeToken(TokenType.AND, "&&");
+      return this.makeToken(TokenType.AND, "&&", null, startLine, startCol);
     }
+
     if (ch === "\0") return this.makeToken(TokenType.EOF, "", null);
     if (/[0-9]/.test(ch)) return this.readNumber();
     if (/[A-Za-z_]/.test(ch)) return this.readIdentifierOrKeyword();
     if (ch === '"') return this.readString();
 
-    if (ch === "&" && this.peek(1) === "&") {
-      // TODO: implement && tokenization
-    }
-
     if (SINGLE_CHAR_TOKENS[ch]) {
       const tokenType = SINGLE_CHAR_TOKENS[ch];
+      const startLine = this.line;
+      const startCol = this.col;
       this.advance();
-      return this.makeToken(tokenType, ch);
+      return this.makeToken(tokenType, ch, null, startLine, startCol);
     }
 
     this.error(`Unexpected character '${ch}'`);

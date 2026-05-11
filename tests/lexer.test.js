@@ -211,6 +211,16 @@ describe("Operators & Punctuation", () => {
       TokenType.EOF,
     ]);
   });
+
+  test("tokenizes logical AND operator", () => {
+    const lexer = new Lexer("&&");
+    const token = lexer.nextToken();
+
+    assert.equal(token.type, TokenType.AND);
+    assert.equal(token.lexeme, "&&");
+    assert.equal(token.line, 1);
+    assert.equal(token.col, 1);
+  });
 });
 
 describe("Whitespace & Comments", () => {
@@ -301,6 +311,22 @@ describe("Error cases", () => {
     assert.throws(
       () => lexer.nextToken(),
       /Lexer error at 1:1 - Unterminated string/
+    );
+  });
+
+  test("unexpected character error tracks accurate multi-line positions", () => {
+    const lexer = new Lexer("class Foo {\n  Int x;\n  @\n}");
+
+    lexer.nextToken(); 
+    lexer.nextToken(); 
+    lexer.nextToken(); 
+    lexer.nextToken(); 
+    lexer.nextToken(); 
+    lexer.nextToken(); 
+
+    assert.throws(
+      () => lexer.nextToken(),
+      /Lexer error at 3:3 - Unexpected character '@'/
     );
   });
 });
@@ -445,12 +471,44 @@ cat.speak();
 dog.speak();
 `;
 
-    const tokens = new Lexer(src).tokenize();
+    const tokens = new Lexer(src).tokenize().map(t => t.type);
 
-    assert.equal(tokens.length, 111, "Should emit exactly 111 tokens for this specific source code");
-    assert.equal(tokens[0].type, TokenType.CLASS);
-    assert.equal(tokens[1].type, TokenType.IDENTIFIER);
-    assert.equal(tokens[2].type, TokenType.LBRACE);
-    assert.equal(tokens.at(-1).type, TokenType.EOF);
+    assert.deepEqual(tokens, [
+      TokenType.CLASS, TokenType.IDENTIFIER, TokenType.LBRACE,
+      TokenType.INIT, TokenType.LPAREN, TokenType.RPAREN, TokenType.LBRACE, TokenType.RBRACE,
+      TokenType.METHOD, TokenType.IDENTIFIER, TokenType.LPAREN, TokenType.RPAREN, TokenType.VOID_TYPE, TokenType.LBRACE,
+      TokenType.RETURN, TokenType.PRINTLN, TokenType.LPAREN, TokenType.STRING, TokenType.RPAREN, TokenType.SEMICOLON,
+      TokenType.RBRACE,
+      TokenType.RBRACE,
+
+      TokenType.CLASS, TokenType.IDENTIFIER, TokenType.EXTENDS, TokenType.IDENTIFIER, TokenType.LBRACE,
+      TokenType.INIT, TokenType.LPAREN, TokenType.RPAREN, TokenType.LBRACE,
+      TokenType.SUPER, TokenType.LPAREN, TokenType.RPAREN, TokenType.SEMICOLON,
+      TokenType.RBRACE,
+      TokenType.METHOD, TokenType.IDENTIFIER, TokenType.LPAREN, TokenType.RPAREN, TokenType.VOID_TYPE, TokenType.LBRACE,
+      TokenType.RETURN, TokenType.PRINTLN, TokenType.LPAREN, TokenType.STRING, TokenType.RPAREN, TokenType.SEMICOLON,
+      TokenType.RBRACE,
+      TokenType.RBRACE,
+
+      TokenType.CLASS, TokenType.IDENTIFIER, TokenType.EXTENDS, TokenType.IDENTIFIER, TokenType.LBRACE,
+      TokenType.INIT, TokenType.LPAREN, TokenType.RPAREN, TokenType.LBRACE,
+      TokenType.SUPER, TokenType.LPAREN, TokenType.RPAREN, TokenType.SEMICOLON,
+      TokenType.RBRACE,
+      TokenType.METHOD, TokenType.IDENTIFIER, TokenType.LPAREN, TokenType.RPAREN, TokenType.VOID_TYPE, TokenType.LBRACE,
+      TokenType.RETURN, TokenType.PRINTLN, TokenType.LPAREN, TokenType.STRING, TokenType.RPAREN, TokenType.SEMICOLON,
+      TokenType.RBRACE,
+      TokenType.RBRACE,
+
+      TokenType.IDENTIFIER, TokenType.IDENTIFIER, TokenType.SEMICOLON,
+      TokenType.IDENTIFIER, TokenType.IDENTIFIER, TokenType.SEMICOLON,
+
+      TokenType.IDENTIFIER, TokenType.ASSIGN, TokenType.NEW, TokenType.IDENTIFIER, TokenType.LPAREN, TokenType.RPAREN, TokenType.SEMICOLON,
+      TokenType.IDENTIFIER, TokenType.ASSIGN, TokenType.NEW, TokenType.IDENTIFIER, TokenType.LPAREN, TokenType.RPAREN, TokenType.SEMICOLON,
+
+      TokenType.IDENTIFIER, TokenType.DOT, TokenType.IDENTIFIER, TokenType.LPAREN, TokenType.RPAREN, TokenType.SEMICOLON,
+      TokenType.IDENTIFIER, TokenType.DOT, TokenType.IDENTIFIER, TokenType.LPAREN, TokenType.RPAREN, TokenType.SEMICOLON,
+
+      TokenType.EOF
+    ]);
   });
 });
