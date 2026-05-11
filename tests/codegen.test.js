@@ -76,6 +76,16 @@ describe("Expressions", () => {
     test("generates this.field access", () => {
         assert.equal(compileExpr("this.name"), "this.name");
     });
+    test("generates string expressions with active character escaping", () => {
+        assert.equal(compileExpr('"line1\\nline2"'), '"line1\\nline2"');
+        assert.equal(compileExpr('"tabbed\\ttext"'), '"tabbed\\ttext"');
+    });
+    test("generates string concatenation", () => {
+        assert.equal(compileExpr('"foo" + "bar"'), '"foo" + "bar"');
+    });
+    test("generates parenthesized logical expression", () => {
+        assert.equal(compileExpr("(true && false)"), "(true && false)");
+    });
 });
 
 describe("Statements", () => {
@@ -125,6 +135,16 @@ describe("Statements", () => {
     test("generates break inside while", () => {
         const out = compileStmt("while (x) { break; }");
         assert.ok(out.includes("break;"));
+    });
+
+    test("generates variable-to-variable assignment", () => {
+        assert.equal(compileStmt("x = y;"), "x = y;");
+    });
+    test("generates standalone expression statement", () => {
+        assert.equal(compileStmt("robot.move();"), "robot.move();");
+    });
+    test("generates method call statement passing multiple literal arguments", () => {
+        assert.equal(compileStmt("player.move(10, 20);"), "player.move(10, 20);");
     });
 });
 
