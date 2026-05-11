@@ -461,6 +461,34 @@ describe("Inheritance", () => {
     `);
   });
 
+
+  test("rejects method override with parameter count mismatch", () => {
+    checkThrows(`
+      class Parent {
+        init() {}
+        method process(Int a) Void { return; }
+      }
+      class Child extends Parent {
+        init() {}
+        // Invalid override: takes 2 params instead of 1
+        method process(Int a, Int b) Void { return; }
+      }
+    `);
+  });
+
+  test("rejects method override with parameter type mismatch", () => {
+    checkThrows(`
+      class Parent {
+        init() {}
+        method process(Int a) Void { return; }
+      }
+      class Child extends Parent {
+        init() {}
+        // Invalid override: changes param type from Int to Boolean
+        method process(Boolean a) Void { return; }
+      }
+    `);
+  });
 });
 
 
