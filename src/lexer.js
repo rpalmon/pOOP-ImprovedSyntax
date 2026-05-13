@@ -14,6 +14,9 @@ const SINGLE_CHAR_TOKENS = {
   "-": TokenType.MINUS,
   "*": TokenType.STAR,
   "/": TokenType.SLASH,
+  "<": TokenType.LESS,
+  ">": TokenType.GREATER,
+  "!": TokenType.BANG,
 };
 
 export class Lexer {
@@ -195,6 +198,28 @@ export class Lexer {
 
     if (ch === "&" && this.peek(1) === "&") {
       // TODO: implement && tokenization
+    }
+
+    const twoChar = this.source.slice(this.current, this.current + 2);
+
+    const TWO_CHAR_TOKENS = {
+      "==" : TokenType.EQUAL_EQUAL,
+      "!=" : TokenType.BANG_EQUAL,
+      "<=" : TokenType.LESS_EQUAL,
+      ">=" : TokenType.GREATER_EQUAL,
+    };
+
+    if (TWO_CHAR_TOKENS[twoChar]) {
+      const token = {
+        type: TWO_CHAR_TOKENS[twoChar],
+        value: twoChar,
+        line: this.line,
+        column: this.column,
+      };
+
+      this.advance();
+      this.advance();
+      return token;
     }
 
     if (SINGLE_CHAR_TOKENS[ch]) {
