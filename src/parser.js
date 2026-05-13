@@ -177,7 +177,6 @@ export class Parser {
   }
 
   // exp ::= addExp
-  // exp ::= equalityExp
   parseExp(pos) {
     return this.parseEqualityExp(pos);
   }

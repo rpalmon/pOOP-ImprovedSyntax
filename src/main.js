@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Lexer } from "./lexer.js";
 import { Parser } from "./parser.js"; // <-- Added Parser import
-import { CodeGenerator } from "./codegen.js";
+import { CodeGenerator } from ".codegen.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
