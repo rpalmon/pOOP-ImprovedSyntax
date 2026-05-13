@@ -213,7 +213,6 @@ export class Lexer {
       this.advance();
       return this.makeToken(TWO_CHAR_TOKENS[twoChar], twoChar, null, startLine, startCol);
     }
-    
     if (/[0-9]/.test(ch)) return this.readNumber();
     if (/[A-Za-z_]/.test(ch)) return this.readIdentifierOrKeyword();
     if (ch === '"') return this.readString();
