@@ -297,6 +297,8 @@ export class Parser {
         this.assertTokenHereIs(exprResult.nextPos, TokenType.SEMICOLON);
         return new ParseResult(new ExprStmt(exprResult.result), exprResult.nextPos + 1);
       }
+      case TokenType.LBRACE:
+        return this.parseBody(startPosition);
       default:
         throw new ParseException(`Expected statement, got: ${firstToken.type} at line ${firstToken.line}`);
     }
@@ -455,9 +457,16 @@ export class Parser {
       const typeResult = this.parseType(currentPosition);
       this.assertTokenHereIs(typeResult.nextPos, TokenType.IDENTIFIER);
       const nameToken = this.getToken(typeResult.nextPos);
-      this.assertTokenHereIs(typeResult.nextPos + 1, TokenType.SEMICOLON);
-      fields.push(new FieldDef(typeResult.result, nameToken.lexeme));
-      currentPosition = typeResult.nextPos + 2;
+      if (this.getToken(typeResult.nextPos + 1).type === TokenType.ASSIGN) {
+        const initResult = this.parseExp(typeResult.nextPos + 2);
+        this.assertTokenHereIs(initResult.nextPos, TokenType.SEMICOLON);
+        fields.push(new FieldDef(typeResult.result, nameToken.lexeme, initResult.result));
+        currentPosition = initResult.nextPos + 1;
+      } else {
+        this.assertTokenHereIs(typeResult.nextPos + 1, TokenType.SEMICOLON);
+        fields.push(new FieldDef(typeResult.result, nameToken.lexeme));
+        currentPosition = typeResult.nextPos + 2;
+      }
     }
 
     if (this.getToken(currentPosition).type !== TokenType.INIT) {

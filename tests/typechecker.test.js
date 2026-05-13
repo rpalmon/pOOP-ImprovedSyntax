@@ -80,6 +80,20 @@ describe("Statements", () => {
     check("Int x;");
   });
 
+  test("accepts typed declaration with matching initializer", () => {
+    check("Int x = 5;");
+    check("Boolean flag = true;");
+  });
+
+  test("rejects typed declaration with mismatched initializer type", () => {
+    checkThrows("Int x = true;");
+    checkThrows(`Boolean flag = "hello";`);
+  });
+
+  test("rejects unknown type in variable declaration", () => {
+    checkThrows("Ghost x;");
+  });
+
   test("accepts assignment", () => {
     check("Int x;\nx = 5;");
   });
@@ -335,6 +349,43 @@ describe("Classes", () => {
     `);
   });
 
+  test("accepts field initializer with correct type", () => {
+    check(`
+      class Foo {
+        Int x = 5;
+        Boolean flag = true;
+        init() {}
+      }
+    `);
+  });
+
+  test("rejects field initializer with wrong type", () => {
+    checkThrows(`
+      class Foo {
+        Int x = true;
+        init() {}
+      }
+    `);
+  });
+
+  test("rejects unknown type in method parameter", () => {
+    checkThrows(`
+      class Foo {
+        init() {}
+        method run(Ghost g) Void { return; }
+      }
+    `);
+  });
+
+  test("rejects unknown return type on method", () => {
+    checkThrows(`
+      class Foo {
+        init() {}
+        method run() Ghost { return; }
+      }
+    `);
+  });
+
   test("rejects duplicate field definitions in the same class", () => {
     checkThrows(`
       class BadBox {
@@ -442,6 +493,40 @@ describe("Inheritance", () => {
 
   test("rejects mixed types in flattened binary expressions", () => {
     checkThrows("println(1 + true && false);");
+  });
+
+  test("accepts == between subtype and supertype", () => {
+    check(`
+      class Animal { init() {} }
+      class Dog extends Animal { init() {} }
+      Dog d;
+      d = new Dog();
+      Animal a;
+      a = new Animal();
+      Boolean same;
+      same = d == a;
+    `);
+  });
+
+  test("rejects == between unrelated class types", () => {
+    checkThrows(`
+      class Cat { init() {} }
+      class Dog { init() {} }
+      Cat c;
+      c = new Cat();
+      Dog d;
+      d = new Dog();
+      Boolean same;
+      same = c == d;
+    `);
+  });
+
+  test("accepts break in nested block inside while loop", () => {
+    check(`
+      while (true) {
+        { break; }
+      }
+    `);
   });
 
   test("accepts assigning to inherited instance variables", () => {

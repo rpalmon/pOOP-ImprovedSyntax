@@ -176,6 +176,49 @@ describe("Statements", () => {
     assert.equal(stmt.name, "x");
   });
 
+  test("parses typed declaration with integer initializer", () => {
+    const tokens = new Lexer("Int x = 5;").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof VarDeclStmt);
+    assert.equal(stmt.varType, "Int");
+    assert.equal(stmt.name, "x");
+    assert.ok(stmt.initializer instanceof IntegerExpr);
+    assert.equal(stmt.initializer.value, 5);
+  });
+
+  test("parses typed declaration with boolean initializer", () => {
+    const tokens = new Lexer("Boolean flag = true;").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof VarDeclStmt);
+    assert.equal(stmt.varType, "Boolean");
+    assert.equal(stmt.name, "flag");
+    assert.ok(stmt.initializer instanceof BooleanExpr);
+    assert.equal(stmt.initializer.value, true);
+  });
+
+  test("parses typed declaration with expression initializer", () => {
+    const tokens = new Lexer("Int x = 1 + 2;").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof VarDeclStmt);
+    assert.equal(stmt.varType, "Int");
+    assert.ok(stmt.initializer instanceof BinaryExpr);
+    assert.equal(stmt.initializer.op, "+");
+  });
+
+  test("parses class-type declaration with initializer", () => {
+    const tokens = new Lexer("Animal a = new Animal();").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof VarDeclStmt);
+    assert.equal(stmt.varType, "Animal");
+    assert.equal(stmt.name, "a");
+    assert.ok(stmt.initializer instanceof NewExpr);
+    assert.equal(stmt.initializer.className, "Animal");
+  });
+
   test("parses an assignment statement", () => {
     const tokens = new Lexer("x = 5;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
