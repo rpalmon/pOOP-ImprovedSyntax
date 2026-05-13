@@ -178,7 +178,29 @@ export class Parser {
 
   // exp ::= addExp
   parseExp(pos) {
-    return this.parseAndExp(pos);
+    return this.parseEqualityExp(pos);
+  }
+
+  parseEqualityExp(pos) {
+    let left = this.parseComparisonExp(pos);
+
+    while (this.getToken(left.nextPos).type === TokenType.EQUAL_EQUAL) {
+      const right = this.parseComparisonExp(left.nextPos + 1);
+      left = new ParseResult(new BinaryExpr(left.result, "==", right.result), right.nextPos);
+    }
+
+    return left;
+  }
+
+  parseComparisonExp(pos) {
+    let left = this.parseAndExp(pos);
+
+    while (this.getToken(left.nextPos).type === TokenType.LESS) {
+      const right = this.parseAndExp(left.nextPos + 1);
+      left = new ParseResult(new BinaryExpr(left.result, "<", right.result), right.nextPos);
+    }
+
+    return left;
   }
 
   parseAndExp(pos) {

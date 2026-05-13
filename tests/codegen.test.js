@@ -175,6 +175,14 @@ describe("Classes", () => {
         assert.ok(out.includes("speak() {"));
         assert.ok(!out.includes("Void"));
     });
+
+    test("generates less-than comparison", () => {
+        assert.equal(compileExpr("1 < 2"), "1 < 2");
+    });
+
+    test("generates equality comparison", () => {
+        assert.equal(compileExpr("1 == 1"), "1 == 1");
+    });
     
     test("generates super() call in constructor body", () => {
         const out = compile("class Cat extends Animal { init() { super(); } }");

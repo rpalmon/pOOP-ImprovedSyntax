@@ -14,6 +14,7 @@ const SINGLE_CHAR_TOKENS = {
   "-": TokenType.MINUS,
   "*": TokenType.STAR,
   "/": TokenType.SLASH,
+  "<": TokenType.LESS,
 };
 
 export class Lexer {
@@ -191,6 +192,14 @@ export class Lexer {
       this.advance();
       this.advance();
       return this.makeToken(TokenType.AND, "&&", null, startLine, startCol);
+    }
+
+    if (ch === "=" && this.peek(1) === "=") {
+      const startLine = this.line;
+      const startCol = this.col;
+      this.advance();
+      this.advance();
+      return this.makeToken(TokenType.EQUAL_EQUAL, "==", null, startLine, startCol);
     }
 
     if (ch === "\0") return this.makeToken(TokenType.EOF, "", null);

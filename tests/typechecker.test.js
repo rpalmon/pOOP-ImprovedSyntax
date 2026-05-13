@@ -84,6 +84,22 @@ describe("Statements", () => {
     check("Int x;\nx = 5;");
   });
 
+  test("accepts comparison expression", () => {
+    check("Boolean b; b = 1 < 2;");
+  });
+
+  test("rejects comparison with Boolean", () => {
+    checkThrows("Boolean b; b = true < false;");
+  });
+
+  test("accepts equality with same types", () => {
+    check("Boolean b; b = 1 == 1;");
+  });
+
+  test("rejects equality with mismatched types", () => {
+    checkThrows('Boolean b; b = 1 == "one";');
+  });
+
   test("accepts println with any type", () => {
     check(`println(1);`);
     check(`println("hello");`);

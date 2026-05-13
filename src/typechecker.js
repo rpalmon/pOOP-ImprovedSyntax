@@ -298,6 +298,17 @@ export class Typechecker {
         if (rightType !== BOOL) throw new TypeErrorException(`Operator '&&' requires Boolean on right, got '${rightType}'`);
         return BOOL;
 
+      case "<":
+        if (leftType !== INT) throw new TypeErrorException(`Operator '<' requires Int on left, got '${leftType}'`);
+        if (rightType !== INT) throw new TypeErrorException(`Operator '<' requires Int on right, got '${rightType}'`);
+        return BOOL;
+
+      case "==":
+        if (leftType !== rightType) {
+          throw new TypeErrorException(`Operator '==' requires matching types, got '${leftType}' and '${rightType}'`);
+        }
+        return BOOL;
+
       default:
         throw new TypeErrorException(`Unknown operator: '${exp.op}'`);
     }
