@@ -11,6 +11,7 @@ import {
   ThisExpr,
   SuperExpr,
   NewExpr,
+  ParenExpr,
   MethodCallExpr,
   FieldAccessExpr,
   VarDeclStmt,
@@ -128,6 +129,14 @@ describe("Expressions", () => {
 
     assert.ok(classDef instanceof AssignStmt);
     assert.ok(classDef.expr instanceof SuperExpr);
+  });
+
+  test("parses this expression", () => {
+    const tokens = new Lexer("x = this;").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof AssignStmt);
+    assert.ok(stmt.expr instanceof ThisExpr);
   });
   // test("parses dot access", () => { ... });
   test("parses method call", () => {
@@ -270,6 +279,7 @@ describe("Statements", () => {
 
     assert.ok(stmt instanceof AssignStmt);
     assert.ok(stmt.expr instanceof SuperExpr);
+    assert.equal(stmt.expr.methodName, "method");
   });
 });
 
@@ -356,6 +366,23 @@ describe("Classes", () => {
     assert.ok(stmt instanceof AssignStmt);
     assert.ok(stmt.expr instanceof NewExpr);
     assert.equal(stmt.expr.className, "Dog");
+  });
+
+  test("parses Void return type", () => {
+    const tokens = new Lexer("Void").tokenize();
+    const result = new Parser(tokens).parseType(0);
+
+    assert.equal(result.result, "Void");
+  });
+
+  test("throws on method without a name", () => {
+    const tokens = new Lexer("class Foo { init() {} method () Void {} }").tokenize();
+    assert.throws(() => new Parser(tokens).parseClass(0), ParseException);
+  });
+
+  test("throws on method without a return type", () => {
+    const tokens = new Lexer("class Foo { init() {} method run () {} }").tokenize();
+    assert.throws(() => new Parser(tokens).parseClass(0), ParseException);
   });
 
   // test("parses the full example program", () => { ... });

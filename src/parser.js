@@ -60,7 +60,7 @@ export class Parser {
     }
   }
 
-  // primaryExp ::= IDENTIFIER | INTEGER | BOOLEAN | `(` exp `)` | `this` | `super` | `new` IDENTIFIER `(` args `)`
+  // primaryExp ::= IDENTIFIER | INTEGER | STRING | BOOLEAN | `(` exp `)` | `this` | `super` | `new` IDENTIFIER `(` args `)`
   parsePrimaryExp(startPosition) {
     const firstToken = this.getToken(startPosition);
 
@@ -135,7 +135,7 @@ export class Parser {
     if (this.getToken(startPosition + 2).type === TokenType.LPAREN) {
       const argsResult = this.parseArgs(startPosition + 2);
       if (exp instanceof SuperExpr) {
-        return new ParseResult(exp, argsResult.nextPos);
+        return new ParseResult(new SuperExpr(idToken.lexeme, argsResult.result), argsResult.nextPos);
       }
       return new ParseResult(new MethodCallExpr(exp, idToken.lexeme, argsResult.result), argsResult.nextPos);
     } else {
@@ -190,7 +190,15 @@ export class Parser {
     return left;
   }
 
-  // stmt ::= vardec | assignment | return | println | if | while | break
+  // stmt ::= `let` IDENTIFIER `=` exp `;`
+  //        | type IDENTIFIER `;`
+  //        | IDENTIFIER `=` exp `;`
+  //        | exp `;`          (expression statements, e.g. method calls)
+  //        | `return` exp? `;`
+  //        | `println` `(` exp `)` `;`
+  //        | `if` `(` exp `)` body (`else` body)?
+  //        | `while` `(` exp `)` body
+  //        | `break` `;`
   parseStmt(startPosition) {
     const firstToken = this.getToken(startPosition);
 

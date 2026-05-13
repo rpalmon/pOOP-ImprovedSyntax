@@ -4,7 +4,50 @@
 ## Grammar
 
 ```
+program     ::= classDef* stmt*
 
+classDef    ::= `class` IDENTIFIER (`extends` IDENTIFIER)?
+                `{` field* init methodDef* `}`
+
+field       ::= type IDENTIFIER `;`
+
+init        ::= `init` `(` params `)` `{` stmt* `}`
+
+methodDef   ::= `method` IDENTIFIER `(` params `)` type `{` stmt* `}`
+
+params      ::= (type IDENTIFIER (`,` type IDENTIFIER)*)?
+
+type        ::= `Int` | `Boolean` | `Void` | IDENTIFIER
+
+stmt        ::= `let` IDENTIFIER `=` exp `;`
+              | type IDENTIFIER `;`
+              | IDENTIFIER `=` exp `;`
+              | exp `;`
+              | `return` exp? `;`
+              | `println` `(` exp `)` `;`
+              | `if` `(` exp `)` body (`else` body)?
+              | `while` `(` exp `)` body
+              | `break` `;`
+
+body        ::= `{` stmt* `}`
+
+exp         ::= andExp
+andExp      ::= addExp (`&&` addExp)*
+addExp      ::= multExp ((`+` | `-`) multExp)*
+multExp     ::= callExp ((`*` | `/`) callExp)*
+callExp     ::= primaryExp (`.` IDENTIFIER (`(` args `)`)?)*
+
+primaryExp  ::= IDENTIFIER
+              | INTEGER
+              | STRING
+              | `true`
+              | `false`
+              | `(` exp `)`
+              | `this`
+              | `super`
+              | `new` IDENTIFIER `(` args `)`
+
+args        ::= (exp (`,` exp)*)?
 ```
 
 ## Tokens
