@@ -240,8 +240,17 @@ export class Parser {
           return new ParseResult(new VarDeclStmt("let", idToken.lexeme, expResult.result), expResult.nextPos + 1);
         }
 
+        //typed declaration with initializer: Int x = 5;
+        if (this.getToken(startPosition + 1).type === TokenType.IDENTIFIER &&
+        this.getToken(startPosition + 2).type === TokenType.ASSIGN) {
+          const varName = this.getToken(startPosition + 1);
+          const expResult = this.parseExp(startPosition + 3);
+          this.assertTokenHereIs(expResult.nextPos, TokenType.SEMICOLON);
+          return new ParseResult(new VarDeclStmt(firstToken.lexeme, varName.lexeme, expResult.result), expResult.nextPos + 1);
+        }
+
         //class type declaration: Animal Cat;
-        if (this.getToken(startPosition + 1).type === TokenType.IDENTIFIER && 
+        if (this.getToken(startPosition + 1).type === TokenType.IDENTIFIER &&
         this.getToken(startPosition + 2).type === TokenType.SEMICOLON ) {
           const varName = this.getToken(startPosition + 1);
           return new ParseResult(new VarDeclStmt(firstToken.lexeme, varName.lexeme), startPosition + 3);

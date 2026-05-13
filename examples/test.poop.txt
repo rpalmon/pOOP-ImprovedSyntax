@@ -14,7 +14,7 @@ class Animal {
 
 class Cat extends Animal {
   init(String name) {
-    super();
+    super(name);
     this.name = name;
   }
 
@@ -27,7 +27,7 @@ class Cat extends Animal {
 
 class Dog extends Animal {
   init(String name) {
-    super();
+    super(name);
     this.name = name;
   }
 
@@ -73,13 +73,13 @@ if (flag) {
   println("no");
 }
 
-if (y) {
+if (0 < y) {
   println("number works");
 } else {
   println("number false");
 }
 
-while (y) {
+while (0 < y) {
   println("loop");
   break;
 }

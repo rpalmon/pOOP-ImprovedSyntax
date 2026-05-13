@@ -2,8 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Lexer } from "./lexer.js";
-import { Parser } from "./parser.js"; // <-- Added Parser import
-import { CodeGenerator } from ".codegen.js";
+import { Parser } from "./parser.js";
+import { Typechecker } from "./typechecker.js";
+import { CodeGenerator } from "./codegen.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,7 +15,7 @@ const inputPath = process.argv[2] ?? defaultFile;
 try {
     const source = fs.readFileSync(inputPath, "utf8");
     
-    // --- 1. LEXICAL ANALYSIS ---
+    //1. LEXICAL ANALYSIS
     const lexer = new Lexer(source);
     const tokens = lexer.tokenize();
 
@@ -25,15 +26,15 @@ try {
         );
     }
 
-    // --- 2. SYNTAX ANALYSIS (PARSING) ---
+    //2. SYNTAX ANALYSIS (PARSING)
     console.log(`\nParsing file: ${inputPath}\n`);
     const parser = new Parser(tokens);
     const ast = parser.parseProgram();
 
-    console.log("--- ABSTRACT SYNTAX TREE (AST) ---");
-    console.log(JSON.stringify(ast, null, 2));
+    //3. TYPE CHECKING
+    new Typechecker().typecheck(ast);
 
-    // --- 3. CODE GENERATOR ---
+    //4. CODE GENERATOR
     const codegen = new CodeGenerator();
     const jsOutput = codegen.generateProgram(ast);
     console.log(jsOutput);
