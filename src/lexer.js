@@ -14,6 +14,9 @@ const SINGLE_CHAR_TOKENS = {
   "-": TokenType.MINUS,
   "*": TokenType.STAR,
   "/": TokenType.SLASH,
+  "<": TokenType.LESS,
+  ">": TokenType.GREATER,
+  "!": TokenType.BANG,
 };
 
 export class Lexer {
@@ -184,7 +187,8 @@ export class Lexer {
     this.skipWhitespace();
     const ch = this.peek();
 
-    // Accurately capture line/col starting coordinates before consuming multi-char tokens
+    if (ch === "\0") return this.makeToken(TokenType.EOF, "", null);
+
     if (ch === "&" && this.peek(1) === "&") {
       const startLine = this.line;
       const startCol = this.col;
@@ -193,7 +197,23 @@ export class Lexer {
       return this.makeToken(TokenType.AND, "&&", null, startLine, startCol);
     }
 
-    if (ch === "\0") return this.makeToken(TokenType.EOF, "", null);
+    const twoChar = this.source.slice(this.i, this.i + 2);
+
+    const TWO_CHAR_TOKENS = {
+      "==": TokenType.EQUAL_EQUAL,
+      "!=": TokenType.BANG_EQUAL,
+      "<=": TokenType.LESS_EQUAL,
+      ">=": TokenType.GREATER_EQUAL,
+    };
+
+    if (TWO_CHAR_TOKENS[twoChar]) {
+      const startLine = this.line;
+      const startCol = this.col;
+      this.advance();
+      this.advance();
+      return this.makeToken(TWO_CHAR_TOKENS[twoChar], twoChar, null, startLine, startCol);
+    }
+
     if (/[0-9]/.test(ch)) return this.readNumber();
     if (/[A-Za-z_]/.test(ch)) return this.readIdentifierOrKeyword();
     if (ch === '"') return this.readString();
@@ -207,7 +227,6 @@ export class Lexer {
     }
 
     this.error(`Unexpected character '${ch}'`);
-    return null;
   }
 
   tokenize() {

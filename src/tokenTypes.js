@@ -37,5 +37,13 @@ export const TokenType = {
     SLASH: "SLASH",
     AND: "AND",
 
-    EOF: "EOF"
+    EOF: "EOF",
+
+    LESS: "LESS",
+    GREATER: "GREATER",
+    LESS_EQUAL: "LESS_EQUAL",
+    GREATER_EQUAL: "GREATER_EQUAL",
+    EQUAL_EQUAL: "EQUAL_EQUAL",
+    BANG_EQUAL: "BANG_EQUAL",
+    BANG: "BANG"
 }
