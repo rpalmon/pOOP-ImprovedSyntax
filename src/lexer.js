@@ -187,7 +187,8 @@ export class Lexer {
     this.skipWhitespace();
     const ch = this.peek();
 
-    // Accurately capture line/col starting coordinates before consuming multi-char tokens
+    if (ch === "\0") return this.makeToken(TokenType.EOF, "", null);
+
     if (ch === "&" && this.peek(1) === "&") {
       const startLine = this.line;
       const startCol = this.col;
@@ -196,36 +197,26 @@ export class Lexer {
       return this.makeToken(TokenType.AND, "&&", null, startLine, startCol);
     }
 
-    if (ch === "\0") return this.makeToken(TokenType.EOF, "", null);
-    if (/[0-9]/.test(ch)) return this.readNumber();
-    if (/[A-Za-z_]/.test(ch)) return this.readIdentifierOrKeyword();
-    if (ch === '"') return this.readString();
-
-    if (ch === "&" && this.peek(1) === "&") {
-      // TODO: implement && tokenization
-    }
-
-    const twoChar = this.source.slice(this.current, this.current + 2);
+    const twoChar = this.source.slice(this.i, this.i + 2);
 
     const TWO_CHAR_TOKENS = {
-      "==" : TokenType.EQUAL_EQUAL,
-      "!=" : TokenType.BANG_EQUAL,
-      "<=" : TokenType.LESS_EQUAL,
-      ">=" : TokenType.GREATER_EQUAL,
+      "==": TokenType.EQUAL_EQUAL,
+      "!=": TokenType.BANG_EQUAL,
+      "<=": TokenType.LESS_EQUAL,
+      ">=": TokenType.GREATER_EQUAL,
     };
 
     if (TWO_CHAR_TOKENS[twoChar]) {
-      const token = {
-        type: TWO_CHAR_TOKENS[twoChar],
-        value: twoChar,
-        line: this.line,
-        column: this.column,
-      };
-
+      const startLine = this.line;
+      const startCol = this.col;
       this.advance();
       this.advance();
-      return token;
+      return this.makeToken(TWO_CHAR_TOKENS[twoChar], twoChar, null, startLine, startCol);
     }
+
+    if (/[0-9]/.test(ch)) return this.readNumber();
+    if (/[A-Za-z_]/.test(ch)) return this.readIdentifierOrKeyword();
+    if (ch === '"') return this.readString();
 
     if (SINGLE_CHAR_TOKENS[ch]) {
       const tokenType = SINGLE_CHAR_TOKENS[ch];
@@ -236,7 +227,6 @@ export class Lexer {
     }
 
     this.error(`Unexpected character '${ch}'`);
-    return null;
   }
 
   tokenize() {
