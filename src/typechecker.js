@@ -82,12 +82,24 @@ export class Typechecker {
       ));
     }
 
-    // make sure every superclass actually exists
+    // make sure every superclass, field type, param type, and return type exists
     for (const [name, entry] of this.classTable) {
       if (entry.superclass !== null && !this.classTable.has(entry.superclass)) {
         throw new TypeErrorException(
           `Class '${name}' extends unknown class '${entry.superclass}'`
         );
+      }
+      for (const [fieldName, fieldType] of entry.fields) {
+        this.assertTypeExists(fieldType);
+      }
+      for (const paramType of entry.initParamTypes) {
+        this.assertTypeExists(paramType);
+      }
+      for (const [methodName, sig] of entry.methods) {
+        this.assertTypeExists(sig.returnType);
+        for (const paramType of sig.paramTypes) {
+          this.assertTypeExists(paramType);
+        }
       }
     }
   }
@@ -101,6 +113,13 @@ export class Typechecker {
     if (entry.superclass === null) return false;
 
     return this.isSubtype(entry.superclass, sup);
+  }
+
+  assertTypeExists(typeName) {
+    const primitives = new Set([INT, BOOL, STRING, VOID]);
+    if (!primitives.has(typeName) && !this.classTable.has(typeName)) {
+      throw new TypeErrorException(`Unknown type: '${typeName}'`);
+    }
   }
 
   assertSubtype(sub, sup, context) {
@@ -135,6 +154,13 @@ export class Typechecker {
 
   // pass 2: typecheck class bodies
   typecheckClass(cls) {
+    for (const field of cls.fields) {
+      if (field.initializer !== null) {
+        const t = this.typecheckExp(field.initializer, new Map(), cls.name);
+        this.assertSubtype(t, field.type, `field '${field.name}' initializer`);
+      }
+    }
+
     const initEnv = new Map();
     for (const param of cls.init.params) {
       initEnv.set(param.name, param.type);
@@ -171,6 +197,7 @@ export class Typechecker {
   // stmt ::= vardec | assignment | return | println | if | while | break | exprstmt | block
   typecheckStmt(stmt, env, expectedReturn, currentClass, inLoop = false) {
     if (stmt instanceof VarDeclStmt) {
+      this.assertTypeExists(stmt.varType);
       if (stmt.initializer !== null) {
         const initType = this.typecheckExp(stmt.initializer, env, currentClass);
         this.assertSubtype(initType, stmt.varType, "variable declaration");
@@ -229,7 +256,7 @@ export class Typechecker {
       this.typecheckExp(stmt.expr, env, currentClass);
 
     } else if (stmt instanceof BlockStmt) {
-      this.typecheckBody(stmt, env, expectedReturn, currentClass);
+      this.typecheckBody(stmt, env, expectedReturn, currentClass, inLoop);
 
     } else {
       throw new TypeErrorException(`Unknown statement kind: ${stmt.kind}`);
@@ -304,8 +331,8 @@ export class Typechecker {
         return BOOL;
 
       case "==":
-        if (leftType !== rightType) {
-          throw new TypeErrorException(`Operator '==' requires matching types, got '${leftType}' and '${rightType}'`);
+        if (!this.isSubtype(leftType, rightType) && !this.isSubtype(rightType, leftType)) {
+          throw new TypeErrorException(`Operator '==' requires compatible types, got '${leftType}' and '${rightType}'`);
         }
         return BOOL;
 
