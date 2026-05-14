@@ -84,6 +84,13 @@ export class FieldAccessExpr {
   }
 }
 
+export class PrintlnExpr {
+  constructor(expr) {
+    this.kind = "PrintlnExpr";
+    this.expr = expr;
+  }
+}
+
 // --- AST Statements ---
 export class VarDeclStmt {
   constructor(varType, name, initializer = null) {

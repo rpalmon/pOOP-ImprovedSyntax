@@ -324,6 +324,34 @@ describe("Statements", () => {
     assert.ok(stmt.expr instanceof SuperExpr);
     assert.equal(stmt.expr.methodName, "method");
   });
+  test("parses println as expression", () => {
+    const tokens = new Lexer("x = println(1);").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof AssignStmt);
+    assert.equal(stmt.expr.kind, "PrintlnExpr");
+  });
+  test("parses return println expression", () => {
+    const tokens = new Lexer("return println(0);").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof ReturnStmt);
+    assert.equal(stmt.expr.kind, "PrintlnExpr");
+  });
+  test("parses if with single statement body", () => {
+    const tokens = new Lexer("if (true) println(1);").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof IfStmt);
+    assert.ok(stmt.thenBranch instanceof PrintlnStmt);
+  });
+  test("parses while with single statement body", () => {
+    const tokens = new Lexer("while (true) break;").tokenize();
+    const stmt = new Parser(tokens).parseStmt(0).result;
+
+    assert.ok(stmt instanceof WhileStmt);
+    assert.ok(stmt.body instanceof BreakStmt);
+  });
 });
 
 describe("Classes", () => {
