@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/main.js",
+    "run-example": "node src/main.js examples/test.poop.txt | node",
     "test": "node --test",
     "jest": "jest"
   },
