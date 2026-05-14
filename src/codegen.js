@@ -93,7 +93,13 @@ export class CodeGenerator {
 
             case "ExprStmt":
                 return `${indent}${this.generateExpr(stmt.expr)};`;
-            
+            case "BlockStmt":
+                const lines = [`${indent}{`];
+                for(const s of stmt.stmts) {
+                    lines.push(this.generateStmt(s, indentLevel + 1));
+                }
+                lines.push(`${indent}}`);
+                return lines.join("\n");            
             default:
                 throw new CodeGenException(`Unknown statement kind: ${stmt.kind}`);
         }
