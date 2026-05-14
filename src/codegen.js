@@ -99,19 +99,28 @@ export class CodeGenerator {
         }
     }
 
+    getStmtList(stmtOrBlock) {
+        if (!stmtOrBlock) return [];
+        if (stmtOrBlock.kind === "BlockStmt") return stmtOrBlock.stmts;
+        return [stmtOrBlock];
+    }
+
     generateIf(stmt, indentLevel) {
         const indent = this.indent(indentLevel);
         const condition = this.generateExpr(stmt.condition);
         const lines = [`${indent}if (${condition}) {`];
-        for(const s of stmt.thenBranch.stmts) {
+
+        for (const s of this.getStmtList(stmt.thenBranch)) {
             lines.push(this.generateStmt(s, indentLevel + 1));
         }
-        if(stmt.elseBranch && stmt.elseBranch.stmts.length > 0) {
+
+        if (stmt.elseBranch) {
             lines.push(`${indent}} else {`);
-            for (const s of stmt.elseBranch.stmts) {
+            for (const s of this.getStmtList(stmt.elseBranch)) {
                 lines.push(this.generateStmt(s, indentLevel + 1));
             }
         }
+
         lines.push(`${indent}}`);
         return lines.join("\n");
     }
@@ -121,9 +130,10 @@ export class CodeGenerator {
         const condition = this.generateExpr(stmt.condition);
         const lines = [`${indent}while (${condition}) {`];
 
-        for (const s of stmt.body.stmts) {
+        for (const s of this.getStmtList(stmt.body)) {
             lines.push(this.generateStmt(s, indentLevel + 1));
         }
+
         lines.push(`${indent}}`);
         return lines.join("\n");
     }
@@ -175,6 +185,9 @@ export class CodeGenerator {
                 const newArgs = expr.args.map(a => this.generateExpr(a)).join(", ");
                 return `new ${expr.className}(${newArgs})`;
             }
+
+            case "PrintlnExpr":
+                return `console.log(${this.generateExpr(expr.expr)})`;
 
             default:
                 throw new CodeGenException(`Unknown expression kind: ${expr.kind}`);

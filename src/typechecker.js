@@ -1,7 +1,7 @@
 // typechecker.js
 import {
   IdentifierExpr, IntegerExpr, StringExpr, ParenExpr, BinaryExpr,
-  BooleanExpr, NewExpr, ThisExpr, SuperExpr, MethodCallExpr, FieldAccessExpr,
+  BooleanExpr, NewExpr, ThisExpr, SuperExpr, MethodCallExpr, FieldAccessExpr, PrintLnExpr,
   VarDeclStmt, AssignStmt, ReturnStmt, PrintlnStmt, IfStmt, WhileStmt,
   BreakStmt, BlockStmt, ExprStmt,
   ClassDef, InitDef, MethodDef, FieldDef, Param,
@@ -50,6 +50,14 @@ export class Typechecker {
     const env = new Map();
     for (const stmt of program.stmts) {
       this.typecheckStmt(stmt, env, null, null);
+    }
+  }
+
+  typecheckStmtOrBlock(stmtOrBlock, env, expectedReturn, currentClass, inLoop = false) {
+    if (stmtOrBlock instanceof BlockStmt) {
+      this.typecheckBody(stmtOrBlock, env, expectedReturn, currentClass, inLoop);
+    } else {
+      this.typecheckStmt(stmtOrBlock, env, expectedReturn, currentClass, inLoop);
     }
   }
 
@@ -231,22 +239,23 @@ export class Typechecker {
       this.typecheckExp(stmt.expr, env, currentClass);
 
     } else if (stmt instanceof IfStmt) {
-      const condType = this.typecheckExp(stmt.condition, env, currentClass);
-      if (condType !== BOOL) {
-        throw new TypeErrorException(`If condition must be Boolean, got '${condType}'`);
-      }
-      this.typecheckBody(stmt.thenBranch, env, expectedReturn, currentClass, inLoop);
-      if (stmt.elseBranch !== null) {
-        this.typecheckBody(stmt.elseBranch, env, expectedReturn, currentClass, inLoop);
-      }
+        const condType = this.typecheckExp(stmt.condition, env, currentClass);
+        if (condType !== BOOL) {
+          throw new TypeErrorException(`If condition must be Boolean, got '${condType}'`);
+        }
 
+        this.typecheckStmtOrBlock(stmt.thenBranch, env, expectedReturn, currentClass, inLoop);
+
+        if (stmt.elseBranch !== null) {
+          this.typecheckStmtOrBlock(stmt.elseBranch, env, expectedReturn, currentClass, inLoop);
+        }
     } else if (stmt instanceof WhileStmt) {
-      const condType = this.typecheckExp(stmt.condition, env, currentClass);
-      if (condType !== BOOL) {
-        throw new TypeErrorException(`While condition must be Boolean, got '${condType}'`);
-      }
-      this.typecheckBody(stmt.body, env, expectedReturn, currentClass, true);
+        const condType = this.typecheckExp(stmt.condition, env, currentClass);
+        if (condType !== BOOL) {
+          throw new TypeErrorException(`While condition must be Boolean, got '${condType}'`);
+        }
 
+        this.typecheckStmtOrBlock(stmt.body, env, expectedReturn, currentClass, true);
     } else if (stmt instanceof BreakStmt) {
       if (!inLoop) {
         throw new TypeErrorException(`'break' used outside of a while loop`);
@@ -304,6 +313,9 @@ export class Typechecker {
     } else if (exp instanceof FieldAccessExpr) {
       return this.typecheckFieldAccessExp(exp, env, currentClass);
 
+    } else if (exp instanceof PrintlnExpr) {
+      this.typecheckExp(exp.expr, env, currentClass);
+      return VOID;
     } else {
       throw new TypeErrorException(`Unknown expression kind: ${exp.kind}`);
     }

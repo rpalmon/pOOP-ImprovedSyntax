@@ -28,7 +28,7 @@ export class ParenExpr {
     this.expr = expr; 
   }
 }
-// op is one of: "+", "-", "*", "/", "&&"
+// op is the binary operator string, such as "+", "-", "*", "/", "&&", "<", "=="
 export class BinaryExpr {
   constructor(left, op, right) {
     this.kind = "BinaryExpr";

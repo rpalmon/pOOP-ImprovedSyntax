@@ -334,7 +334,7 @@ export class Parser {
     return new ParseResult(new PrintlnStmt(expResult.result), expResult.nextPos + 2);
   }
 
-  // if ::= `if` `(` exp `)` `{` stmt* `}` (`else` `{` stmt* `}`)?
+  // if ::= `if` `(` exp `)` stmt (`else` stmt)?
   parseIf(startPosition) {
     this.assertTokenHereIs(startPosition, TokenType.IF);
     this.assertTokenHereIs(startPosition + 1, TokenType.LPAREN);
@@ -360,7 +360,7 @@ export class Parser {
     );
   }
 
-  // while ::= `while` `(` exp `)` `{` stmt* `}`
+  // while ::= `while` `(` exp `)` stmt
   parseWhile(startPosition) {
     this.assertTokenHereIs(startPosition, TokenType.WHILE);
     this.assertTokenHereIs(startPosition + 1, TokenType.LPAREN);
