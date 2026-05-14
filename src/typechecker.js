@@ -1,7 +1,7 @@
 // typechecker.js
 import {
   IdentifierExpr, IntegerExpr, StringExpr, ParenExpr, BinaryExpr,
-  BooleanExpr, NewExpr, ThisExpr, SuperExpr, MethodCallExpr, FieldAccessExpr, PrintLnExpr,
+  BooleanExpr, NewExpr, ThisExpr, SuperExpr, MethodCallExpr, FieldAccessExpr, PrintlnExpr,
   VarDeclStmt, AssignStmt, ReturnStmt, PrintlnStmt, IfStmt, WhileStmt,
   BreakStmt, BlockStmt, ExprStmt,
   ClassDef, InitDef, MethodDef, FieldDef, Param,
