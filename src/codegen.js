@@ -39,7 +39,6 @@ export class CodeGenerator {
 
     generateInit(initDef, indentLevel) {
         const indent = this.indent(indentLevel);
-        const innerIndent = this.indent(indentLevel + 1);
         const params = initDef.params.map(p => p.name).join(", ");
         const lines = [`${indent}constructor(${params}) {`];
         for (const stmt of initDef.body.stmts) {
