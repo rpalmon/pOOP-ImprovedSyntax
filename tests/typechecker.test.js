@@ -590,6 +590,24 @@ describe("Inheritance", () => {
       }
     `);
   });
+
+  test("rejects a class extending itself directly", () => {
+    checkThrows("class Foo extends Foo { init() {} }");
+  });
+
+  test("rejects simple cyclic inheritance", () => {
+    checkThrows(`
+      class Foo extends Bar { init() {} }
+      class Bar extends Baz { init() {} }
+      class Baz extends Foo { init() {} }
+    `);
+  });
+  test("accepts simple valid method override", () => {
+    check(`
+      class Foo { init() {} method ping() Void { return; } }
+      class Bar extends Foo { init() {} method ping() Void { return; } }
+    `);
+  });
 });
 
 
