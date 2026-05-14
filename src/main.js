@@ -19,15 +19,15 @@ try {
     const lexer = new Lexer(source);
     const tokens = lexer.tokenize();
 
-    console.log(`Lexing file: ${inputPath}\n`);
+    process.stderr.write(`Lexing file: ${inputPath}\n\n`);
     for (const token of tokens) {
-        console.log(
-            `${token.type.padEnd(12)} lexeme=${JSON.stringify(token.lexeme)} value=${JSON.stringify(token.literal)} @ ${token.line}:${token.col}`
+        process.stderr.write(
+            `${token.type.padEnd(12)} lexeme=${JSON.stringify(token.lexeme)} value=${JSON.stringify(token.literal)} @ ${token.line}:${token.col}\n`
         );
     }
 
     //2. SYNTAX ANALYSIS (PARSING)
-    console.log(`\nParsing file: ${inputPath}\n`);
+    process.stderr.write(`\nParsing file: ${inputPath}\n\n`);
     const parser = new Parser(tokens);
     const ast = parser.parseProgram();
 
