@@ -77,7 +77,7 @@ export class Lexer {
     const startCol = this.col;
     let lexeme = "";
 
-    while (/[0-9]/.test(this.peek())) {
+    while (/\d/.test(this.peek())) {
       lexeme += this.advance();
     }
 
@@ -95,7 +95,7 @@ export class Lexer {
     const startCol = this.col;
     let lexeme = "";
 
-    while (/[A-Za-z0-9_]/.test(this.peek())) {
+    while (/\w/.test(this.peek())) {
       lexeme += this.advance();
     }
 
@@ -213,8 +213,8 @@ export class Lexer {
       this.advance();
       return this.makeToken(TWO_CHAR_TOKENS[twoChar], twoChar, null, startLine, startCol);
     }
-    if (/[0-9]/.test(ch)) return this.readNumber();
-    if (/[A-Za-z_]/.test(ch)) return this.readIdentifierOrKeyword();
+    if (/\d/.test(ch)) return this.readNumber();
+    if (/\w/.test(ch)) return this.readIdentifierOrKeyword();
     if (ch === '"') return this.readString();
 
     if (SINGLE_CHAR_TOKENS[ch]) {

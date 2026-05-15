@@ -11,7 +11,6 @@ import {
   ThisExpr,
   SuperExpr,
   NewExpr,
-  ParenExpr,
   MethodCallExpr,
   FieldAccessExpr,
   VarDeclStmt,
@@ -98,7 +97,6 @@ describe("Expressions", () => {
     assert.ok(stmt instanceof AssignStmt);
   });
 
-  // TODO: add as you implement each expression type
   // test("parses true literal", () => { ... });
   test("parses boolean literals in expressions",() => {
     const tokens = new Lexer("x = true && false;").tokenize();
@@ -167,7 +165,6 @@ describe("Expressions", () => {
 
 describe("Statements", () => {
   test("parses a variable declaration", () => {
-    // TODO: fix TokenType.INT -> INT_TYPE bug first, then uncomment
     const tokens = new Lexer("Int x;").tokenize();
     const stmt = new Parser(tokens).parseStmt(0).result;
 
@@ -247,7 +244,6 @@ describe("Statements", () => {
     assert.equal(program.classDefs.length, 0);
   });
 
-  // TODO: add as you implement each statement type
   // test("parses return statement", () => { ... });
   test("parses return statement", () => {
     const tokens = new Lexer("return 5;").tokenize();
@@ -355,7 +351,6 @@ describe("Statements", () => {
 });
 
 describe("Classes", () => {
-  // TODO: add as you implement class parsing
   // test("parses empty class", () => { ... });
   test("throws on class without init", () => {
     const tokens = new Lexer("class Foo {}").tokenize();

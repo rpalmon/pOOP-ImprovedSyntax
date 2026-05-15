@@ -93,13 +93,18 @@ export class CodeGenerator {
 
             case "ExprStmt":
                 return `${indent}${this.generateExpr(stmt.expr)};`;
-            case "BlockStmt":
+
+            case "BlockStmt": {
                 const lines = [`${indent}{`];
-                for(const s of stmt.stmts) {
+
+                for (const s of stmt.stmts) {
                     lines.push(this.generateStmt(s, indentLevel + 1));
                 }
+
                 lines.push(`${indent}}`);
-                return lines.join("\n");            
+                return lines.join("\n");
+            }
+
             default:
                 throw new CodeGenException(`Unknown statement kind: ${stmt.kind}`);
         }
@@ -151,7 +156,7 @@ export class CodeGenerator {
                 return String(expr.value);
             
             case "StringExpr":
-                return `"${expr.value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t")}"`;
+                return JSON.stringify(expr.value);
 
             case "ParenExpr":
                 return `(${this.generateExpr(expr.expr)})`;

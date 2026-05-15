@@ -313,15 +313,12 @@ export class Parser {
   parseReturn(startPosition) {
     this.assertTokenHereIs(startPosition, TokenType.RETURN);
     const nextToken = this.getToken(startPosition + 1);
-    switch (nextToken.type) {
-      case TokenType.SEMICOLON:
-        return new ParseResult(new ReturnStmt(null), startPosition + 2);
-      default: {
-        const expResult = this.parseExp(startPosition + 1);
-        this.assertTokenHereIs(expResult.nextPos, TokenType.SEMICOLON);
-        return new ParseResult(new ReturnStmt(expResult.result), expResult.nextPos + 1);
-      }
+    if (nextToken.type === TokenType.SEMICOLON) {
+      return new ParseResult(new ReturnStmt(null), startPosition + 2);
     }
+    const expResult = this.parseExp(startPosition + 1);
+    this.assertTokenHereIs(expResult.nextPos, TokenType.SEMICOLON);
+    return new ParseResult(new ReturnStmt(expResult.result), expResult.nextPos + 1);
   }
 
   // println ::= `println` `(` exp `)` `;`
