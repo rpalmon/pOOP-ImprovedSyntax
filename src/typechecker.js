@@ -205,12 +205,21 @@ export class Typechecker {
   // stmt ::= vardec | assignment | return | println | if | while | break | exprstmt | block
   typecheckStmt(stmt, env, expectedReturn, currentClass, inLoop = false) {
     if (stmt instanceof VarDeclStmt) {
-      this.assertTypeExists(stmt.varType);
-      if (stmt.initializer !== null) {
+      if (stmt.varType === "let") {
+        // type-inferred declaration: let x = <expr>;
+        if (stmt.initializer === null) {
+          throw new TypeErrorException(`'let' declaration requires an initializer`);
+        }
         const initType = this.typecheckExp(stmt.initializer, env, currentClass);
-        this.assertSubtype(initType, stmt.varType, "variable declaration");
+        env.set(stmt.name, initType);
+      } else {
+        this.assertTypeExists(stmt.varType);
+        if (stmt.initializer !== null) {
+          const initType = this.typecheckExp(stmt.initializer, env, currentClass);
+          this.assertSubtype(initType, stmt.varType, "variable declaration");
+        }
+        env.set(stmt.name, stmt.varType);
       }
-      env.set(stmt.name, stmt.varType);
 
     } else if (stmt instanceof AssignStmt) {
       const rhsType = this.typecheckExp(stmt.expr, env, currentClass);
